@@ -14,4 +14,6 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
 //    List<Schedule> findAllByLeagueSlugAndStartTimeAfterOOrderByStartTimeDesc(String slug, String startTime);
     Optional<Schedule> findByMatchId(String matchId);
 
+    List<Schedule> findAllByLeagueSlugAndStartTimeAfterAndBlockName(String slug, String startDate, String blockName);
+
 }

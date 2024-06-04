@@ -3,40 +3,34 @@ package com.example.java21_test.service;
 import com.example.java21_test.dto.LeagueScheduleMapper;
 import com.example.java21_test.dto.LeagueScheduleResponseDto;
 import com.example.java21_test.dto.PageResponseDto;
-import com.example.java21_test.dto.StatusCodeResponseDto;
 import com.example.java21_test.entity.Schedule;
 import com.example.java21_test.respository.ScheduleRepository;
+import com.example.java21_test.util.RestTemplateUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.*;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-@Slf4j(topic = "openApi schedule 조회")
+@Slf4j(topic = "openApi schedule 저장, db조회")
 @Service
 @RequiredArgsConstructor
 public class ScheduleService {
     private final ScheduleRepository scheduleRepository;
-//    private final RestTemplate restTemplate;
-    @Value("${x-api-key}")
-    private String AUTH_KEY;
+    private final RestTemplateUtil restTemplateUtil;
 //    api 읽기, 값 저장, 값 가져오기, leagueId 확인
 
     public PageResponseDto saveLeagueSchedules() {
@@ -70,10 +64,6 @@ public class ScheduleService {
 
     public void saveLeagueSchedulesFromApi(String leagueId, String newer) {
         log.info("특정리그 schedule 가져오기 from api");
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.set("x-api-key", AUTH_KEY); //Authorization 설정
-        HttpEntity<String> httpEntity = new HttpEntity<>(httpHeaders); //엔티티로 만들기
 
         URI targetUrl = UriComponentsBuilder
                 .fromUriString("https://esports-api.lolesports.com")
@@ -85,7 +75,7 @@ public class ScheduleService {
                 .encode(StandardCharsets.UTF_8) //인코딩
                 .toUri();
 
-        ResponseEntity<String> result = restTemplate.exchange(targetUrl, HttpMethod.GET, httpEntity, String.class);
+        ResponseEntity<String> result = restTemplateUtil.getDataFromAPI(targetUrl);
 
         saveScheduleFromJson(result.getBody(), leagueId);
     }

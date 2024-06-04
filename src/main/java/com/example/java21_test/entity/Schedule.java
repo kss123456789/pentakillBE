@@ -11,9 +11,9 @@ import java.util.List;
 @NoArgsConstructor
 @Table(name = "schedules")
 public class Schedule {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    private Long id;
 
     private String startTime;
     private String state;
@@ -22,6 +22,7 @@ public class Schedule {
     private String leagueName;
     private String leagueSlug;
     @Column(nullable = false, unique = true)
+    @Id
     private String matchId;
 //    private List<String> matchFlags; //영상유무
     private String team1Name;

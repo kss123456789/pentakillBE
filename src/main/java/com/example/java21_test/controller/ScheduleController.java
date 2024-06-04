@@ -25,6 +25,6 @@ public class ScheduleController {
         return scheduleService.getLeagueSchedules(size, page);
     }
 
-    // 리그별 세부 경기 일정
+    // 리그별 세부 경기 일정 // 안하게 될지도 모름 우선도 낮음
 
 }
