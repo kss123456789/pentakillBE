@@ -41,7 +41,7 @@ public class UserService {
         }
 
         // 사용자 등록
-        User user = new User(username, email, password, 0);
+        User user = new User(username, email, password);
         userRepository.save(user);
 
         // Jwt 토큰 생성, response에 넣기

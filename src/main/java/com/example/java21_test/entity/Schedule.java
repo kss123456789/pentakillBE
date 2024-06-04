@@ -9,7 +9,6 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "schedules")
 public class Schedule {
 //    @Id
 //    @GeneratedValue(strategy = GenerationType.IDENTITY)

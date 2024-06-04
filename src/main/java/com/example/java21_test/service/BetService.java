@@ -2,6 +2,7 @@ package com.example.java21_test.service;
 
 import com.example.java21_test.dto.LeagueScheduleMapper;
 import com.example.java21_test.dto.LeagueScheduleResponseDto;
+import com.example.java21_test.dto.RecentWeeklySchedulesResponseDto;
 import com.example.java21_test.dto.StatusCodeResponseDto;
 import com.example.java21_test.entity.Schedule;
 import com.example.java21_test.entity.Tournament;
@@ -20,6 +21,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,9 +51,11 @@ public class BetService {
     }
 
     public StatusCodeResponseDto getRecentTournamentSchedules() {
-        String localDateNow = LocalDate.now().toString();
+        // 현재 시간 가져오기
+        Instant instantNow = Instant.now();
+        String nowString = instantNow.toString();
         // tournament에서 가장 최근 일정을 가져온다
-        Tournament tournament = tournamentRepository.findTop1ByEndDateAfterOrderByStartDateAsc(localDateNow).orElse(null);
+        Tournament tournament = tournamentRepository.findTop1ByEndDateAfterOrderByStartDateAsc(nowString).orElse(null);
         if (tournament == null) {
             // 비어 있다면 적절한 응답을 반환
             return new StatusCodeResponseDto(HttpStatus.NOT_FOUND.value(), "No schedules found for the league", null);
@@ -63,6 +67,8 @@ public class BetService {
 
         // 각 주차별 값을 가져와서 같은 list에 넣어서 responseDto 생성
         int weekNum = 1;
+        int curreentWeek = 0;
+        // while 써서 전체 탐색후 필요한 주차의 값만을 출력
         while (true) {
             String blockName = String.format("%d주 차", weekNum);
             List<Schedule> newScheduleList = scheduleRepository.findAllByLeagueSlugAndStartTimeAfterAndBlockName(slug, startDate, blockName);
@@ -70,13 +76,24 @@ public class BetService {
             if (newScheduleList.isEmpty()) {
                 break;
             }
+            if (curreentWeek == 0) {
+                // 주차별 결과의 시작일이 오늘보다 이전일 경우 current week
+                Instant weekStart = Instant.parse(newScheduleList.getFirst().getStartTime());
+                Instant weekEnd = Instant.parse(newScheduleList.getLast().getStartTime());
+                if (weekStart.isBefore(instantNow) && weekEnd.isAfter(instantNow)) {
+                    curreentWeek = weekNum - 1;
+                }
+            }
+
             // schdule dto 변환 후 최종 리스트에 추가
             List<LeagueScheduleResponseDto> newScheduleResponseList = newScheduleList.stream().map(LeagueScheduleMapper::toDto).toList();
             groupedScheduleDto.add(newScheduleResponseList);
             weekNum++;
         }
 
-        return new StatusCodeResponseDto(HttpStatus.OK.value(), "SUCCESS", groupedScheduleDto);
+        RecentWeeklySchedulesResponseDto recentWeeklySchedulesResponseDto = new RecentWeeklySchedulesResponseDto(groupedScheduleDto, curreentWeek, weekNum - 2);
+
+        return new StatusCodeResponseDto(HttpStatus.OK.value(), "SUCCESS", recentWeeklySchedulesResponseDto);
     }
 
     public void saveTournamentsFromApi(String leagueId) {

@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "tournaments")
 public class Tournament {
     @Id
     private String id;
