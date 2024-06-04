@@ -1,6 +1,5 @@
 package com.example.java21_test.controller;
 
-import com.example.java21_test.dto.PageResponseDto;
 import com.example.java21_test.dto.StatusCodeResponseDto;
 import com.example.java21_test.service.BetService;
 import lombok.RequiredArgsConstructor;

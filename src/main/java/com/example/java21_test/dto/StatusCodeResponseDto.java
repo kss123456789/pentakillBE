@@ -13,4 +13,10 @@ public class StatusCodeResponseDto<T> {
         this.message = message;
         this.data = data;
     }
+
+    public StatusCodeResponseDto(int statusCode, String message) {
+        this.statusCode = statusCode;
+        this.message = message;
+        this.data = null;
+    }
 }

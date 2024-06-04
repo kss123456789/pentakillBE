@@ -68,10 +68,10 @@ public class BetService {
         // 각 주차별 값을 가져와서 같은 list에 넣어서 responseDto 생성
         int weekNum = 1;
         int curreentWeek = 0;
-        // while 써서 전체 탐색후 필요한 주차의 값만을 출력
+        // while 써서 전체 탐색후 필요한 주차의 값만을 출력 //출력 값에 순서 이상 있는것 같음
         while (true) {
             String blockName = String.format("%d주 차", weekNum);
-            List<Schedule> newScheduleList = scheduleRepository.findAllByLeagueSlugAndStartTimeAfterAndBlockName(slug, startDate, blockName);
+            List<Schedule> newScheduleList = scheduleRepository.findAllByLeagueSlugAndStartTimeAfterAndBlockNameOrderByStartTimeDesc(slug, startDate, blockName);
             // 주차별 결과가 나오지 않는 것을 확인후 break
             if (newScheduleList.isEmpty()) {
                 break;

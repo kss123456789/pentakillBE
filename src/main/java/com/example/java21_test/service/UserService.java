@@ -3,9 +3,14 @@ package com.example.java21_test.service;
 import com.example.java21_test.dto.LogInRequestDto;
 import com.example.java21_test.dto.SignUpRequestDto;
 import com.example.java21_test.dto.StatusCodeResponseDto;
+import com.example.java21_test.entity.Point;
+import com.example.java21_test.entity.PointLog;
 import com.example.java21_test.entity.User;
+import com.example.java21_test.respository.PointLogRepository;
+import com.example.java21_test.respository.PointRepository;
 import com.example.java21_test.respository.UserRepository;
 import com.example.java21_test.util.JwtUtil;
+import com.example.java21_test.util.PointUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,8 +25,11 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PointRepository pointRepository;
+    private final PointLogRepository pointLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final PointUtil pointUtil;
 
 //    @Value("${adimin.token}") // Base64 Encode 한 SecretKey
 //    private String ADMIN_TOKEN;
@@ -39,17 +47,31 @@ public class UserService {
         if (checkUsername.isPresent()) {
             throw new IllegalArgumentException("중복된 Email 입니다.");
         }
-
+        // user 생성시 point도 같이 생성되도록 함... user 삭제시 point 연관관계 좀더 고민....
         // 사용자 등록
         User user = new User(username, email, password);
         userRepository.save(user);
+        user = userRepository.findByEmail(email).orElseThrow(() ->
+            new IllegalArgumentException("회원을 찾을 수 없습니다.")
+        );
+        // 유저별 point db 생성
+        Point point = new Point(user);
+        pointRepository.save(point);
+        point = pointRepository.findByUser(user).orElseThrow(() ->
+                new IllegalArgumentException("회원을 찾을 수 없습니다.")
+        );
+        // 가입 포인트
+        PointLog welcomePointLog = new PointLog(1000, "signUp", point); // enum사용으로 바꾸기...
+        pointUtil.getPoint(welcomePointLog);
+
+        pointLogRepository.save(welcomePointLog);
 
         // Jwt 토큰 생성, response에 넣기
         String token = jwtUtil.createToken(user.getId(), user.getEmail(), user.getUsername());
         // Jwt Header
         jwtUtil.addJwtToHeader(token, jwtResponse);
 
-        return new StatusCodeResponseDto(HttpStatus.CREATED.value(), "회원가입 성공", null);
+        return new StatusCodeResponseDto(HttpStatus.CREATED.value(), "회원가입 성공");
     }
 
     //    //로그인    security filter에서 하는 방법도 있는데 이게 더 맞는 방법.
@@ -70,6 +92,6 @@ public class UserService {
 //        // Jwt Header
         jwtUtil.addJwtToHeader(token, jwtResponse);
 
-        return new StatusCodeResponseDto(HttpStatus.OK.value(), "로그인 성공", null);
+        return new StatusCodeResponseDto(HttpStatus.OK.value(), "로그인 성공");
     }
 }
