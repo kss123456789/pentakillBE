@@ -24,6 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class WebSecurityConfig {
 
     private final JwtUtil jwtUtil;
+    private final CorsConfig corsConfig;
     private final UserDetailsServiceImpl userDetailsService;
 
 //    public WebSecurityConfig(JwtUtil jwtUtil, UserDetailsServiceImpl userDetailsService) {
@@ -47,17 +48,26 @@ public class WebSecurityConfig {
 //        return jwtAuthorizationFilter;
 //    }
 
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer(){
-        return web -> web.ignoring()
-//                    .requestMatchers(new AntPathRequestMatcher("/users/**"))
-//                    .requestMatchers( new AntPathRequestMatcher("/boards/**", "GET"));
-                .requestMatchers("/users/**")
-                .requestMatchers(HttpMethod.GET, "/boards/**");
-    }
+//    @Bean
+//    public WebSecurityCustomizer webSecurityCustomizer(){
+//        return web -> web.ignoring()
+////                    .requestMatchers(new AntPathRequestMatcher("/users/**"))
+////                    .requestMatchers( new AntPathRequestMatcher("/boards/**", "GET"));
+//                .requestMatchers("/users/**")
+////                .requestMatchers(HttpMethod.GET, "/bets/**")
+//                .requestMatchers(HttpMethod.GET, "/points/**")
+//                .requestMatchers(HttpMethod.GET, "/schedules/**");
+//    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .authorizeHttpRequests((requests) ->
+                requests.requestMatchers("/users/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/bets/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/points/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/schedules/**").permitAll()
+                        .anyRequest().authenticated());
         // CSRF 설정
         http.csrf(AbstractHttpConfigurer::disable);
 
@@ -66,13 +76,13 @@ public class WebSecurityConfig {
                 sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         );
 
-        http.authorizeHttpRequests((authorizeHttpRequests) ->
-                        authorizeHttpRequests
-                                .requestMatchers("/users/**").permitAll() // '/users/'로 시작하는 요청 모두 접근 허가  . 권한이 있지 않지만 통과시켜준다.
-                                .requestMatchers(HttpMethod.GET, "/boards/**").permitAll() // '/boards/'로 시작하는 요청중 get method 모두 접근 허가
-                                .anyRequest().authenticated() // 그 외 모든 요청 인증처리
-                //permitAll과 ignoring의 차이점...
-        );
+//        http.authorizeHttpRequests((authorizeHttpRequests) ->
+//                        authorizeHttpRequests
+//                                .requestMatchers("/users/**").permitAll() // '/users/'로 시작하는 요청 모두 접근 허가  . 권한이 있지 않지만 통과시켜준다.
+//                                .requestMatchers(HttpMethod.GET, "/boards/**").permitAll() // '/boards/'로 시작하는 요청중 get method 모두 접근 허가
+//                                .anyRequest().authenticated() // 그 외 모든 요청 인증처리
+//                //permitAll과 ignoring의 차이점...
+//        );
 
 //        http.formLogin((formLogin) -> {
 //            System.out.println("login test");
@@ -83,7 +93,8 @@ public class WebSecurityConfig {
 
         // 필터 관리  +@Order로 순서를 정하면 정상적으로 작동하지 않음. 여러 필터들의 순서가 꼬이기 때문이지 않을까?
         http.addFilterBefore(new JwtAuthorizationFilter(jwtUtil,userDetailsService), UsernamePasswordAuthenticationFilter.class);
-        http.addFilterBefore(new AuthExceptionFilter(), JwtAuthorizationFilter.class);
+//        http.addFilterBefore(new AuthExceptionFilter(), JwtAuthorizationFilter.class);
+        http.addFilterBefore(corsConfig.corsFilter(), JwtAuthorizationFilter.class);
         return http.build();
     }
 }

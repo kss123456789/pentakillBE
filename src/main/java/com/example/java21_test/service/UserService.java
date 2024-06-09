@@ -67,7 +67,7 @@ public class UserService {
         pointLogRepository.save(welcomePointLog);
 
         // Jwt 토큰 생성, response에 넣기
-        String token = jwtUtil.createToken(user.getId(), user.getEmail(), user.getUsername());
+        String token = jwtUtil.createToken(user, point);
         // Jwt Header
         jwtUtil.addJwtToHeader(token, jwtResponse);
 
@@ -86,9 +86,11 @@ public class UserService {
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new IllegalArgumentException("회원을 찾을 수 없습니다.");
         }
+        Point point = pointRepository.findByUser(user).orElseThrow(() ->
+                new IllegalArgumentException("포인트가 존재하지 않습니다."));
 
         // Jwt 토큰 생성, response에 넣기
-        String token = jwtUtil.createToken(user.getId(), user.getEmail(), user.getUsername());
+        String token = jwtUtil.createToken(user, point);
 //        // Jwt Header
         jwtUtil.addJwtToHeader(token, jwtResponse);
 

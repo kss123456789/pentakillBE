@@ -1,5 +1,6 @@
 package com.example.java21_test.util;
 
+import com.example.java21_test.entity.Point;
 import com.example.java21_test.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -49,15 +50,16 @@ public class JwtUtil {
     }
 
     // jwt 생성
-    public String createToken(Long id, String email, String username) {
+    public String createToken(User user, Point point) {
         Date date = new Date();
 
         return BEARER_PREFIX +
                 Jwts.builder()
 //                        .setSubject(email) // 사용자 식별자값(ID)
-                        .claim("userid", id)
-                        .claim("email", email)
-                        .claim("username", username)
+                        .claim("userid", user.getId())
+                        .claim("email", user.getEmail())
+                        .claim("username", user.getUsername())
+                        .claim("point", point.getPoint())
                         .setExpiration(new Date(date.getTime() + TOKEN_TIME)) // 만료 시간
                         .setIssuedAt(date) // 발급일
                         .signWith(key, signatureAlgorithm) // 암호화 알고리즘
@@ -120,32 +122,25 @@ public class JwtUtil {
 
     // HttpServletRequest 에서 Cookie Value : JWT 가져오기
     public String getTokenFromRequest(HttpServletRequest req) {
-
-        // 쿠키 버전 필요없어졌으니 삭제요망!!!!!!
-        //쿠키의 경우 모든 쿠기에서 필요로 하는 값을 찾아서
-//        Cookie[] cookies = req.getCookies();
-//        if (cookies != null) {
-//            for (Cookie cookie : cookies) {
-//                if (cookie.getName().equals(AUTHORIZATION_HEADER)) {
-//                    try {
-//                        return URLDecoder.decode(cookie.getValue(), "UTF-8"); // Encode 되어 넘어간 Value(공백 인코딩) 다시 Decode
-//                    } catch (UnsupportedEncodingException e) {
-//                        return null;
-//                    }
-//                }
-//            }
-//        }
-//         쿠키 없는 경우 헤더에서 값 가져오기
         String header = req.getHeader(AUTHORIZATION_HEADER);
-//        logger.info("test : " + header);
-        if (!header.isEmpty()) {
+        if (StringUtils.hasText(header)) {
             try {
                 return URLDecoder.decode(header, "UTF-8");
             } catch (UnsupportedEncodingException e) {
                 return null;
             }
         }
-        throw new IllegalArgumentException("토큰이 존재하지 않습니다. 로그인 해주세요.");
+        return null;
+////        logger.info("test : " + header);
+//        if (!header.isEmpty() || header != null) {
+//            try {
+//                return URLDecoder.decode(header, "UTF-8");
+//            } catch (UnsupportedEncodingException e) {
+//                return null;
+//            }
+//        }
+
+//        throw new IllegalArgumentException("토큰이 존재하지 않습니다. 로그인 해주세요.");
 //        return null;
     }
 

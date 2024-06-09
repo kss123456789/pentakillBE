@@ -6,5 +6,5 @@ import lombok.Getter;
 public class PointBettngRequestDto {
     private String matchId;
     private int point;
-    private int teamNum;
+    private String teamCode;
 }

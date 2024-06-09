@@ -20,6 +20,7 @@ public class ScheduleController {
         return scheduleService.saveLeagueSchedules();
     }
 
+    //page, size 값이 안 들어왔을 때 NullpointerException이 나온다아아 이것도 에러처리해보시지
     @GetMapping("/leagues")
     public PageResponseDto<?> getLeagueSchedules(Integer size, Integer page) {
         return scheduleService.getLeagueSchedules(size, page);

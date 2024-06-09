@@ -13,7 +13,8 @@ public class LeagueScheduleResponseDto {
     private League league;
     private Match match;
 
-    public LeagueScheduleResponseDto(String startTime, String state, String type, String blockName, League league, Match match) {
+    public LeagueScheduleResponseDto(String startTime, String state, String type, String blockName,
+                                     League league, Match match) {
         this.startTime = startTime;
         this.state = state;
         this.type = type;
