@@ -43,13 +43,13 @@ public class BettingScheduleResponseDto {
 class MatchRatio {
     private String id;
     private List<String> flags;
-    private List<TeamRatio> team;
+    private List<TeamRatio> teams;
     private Strategy strategy;
 
-    public MatchRatio(String id, List<String> flags, List<TeamRatio> team, Strategy strategy) {
+    public MatchRatio(String id, List<String> flags, List<TeamRatio> teams, Strategy strategy) {
         this.id = id;
         this.flags = flags;
-        this.team = team;
+        this.teams = teams;
         this.strategy = strategy;
     }
 }
