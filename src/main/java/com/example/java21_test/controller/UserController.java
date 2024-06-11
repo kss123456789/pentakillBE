@@ -21,13 +21,13 @@ public class UserController {
 
     // 회원가입 <?> 대신 다른걸 쓰는게 좋을 것 같은데...
     @PostMapping("/signup")
-    public StatusCodeResponseDto<?> signup(@RequestBody @Valid SignUpRequestDto requestDto, HttpServletResponse jwtResponse) {
+    public StatusCodeResponseDto<Void> signup(@RequestBody @Valid SignUpRequestDto requestDto, HttpServletResponse jwtResponse) {
         return userService.signup(requestDto, jwtResponse);
     }
 
     // 로그인
     @PostMapping("/login")
-    public StatusCodeResponseDto<?> login(@RequestBody LogInRequestDto requestDto, HttpServletResponse jwtResponse) {
+    public StatusCodeResponseDto<Void> login(@RequestBody LogInRequestDto requestDto, HttpServletResponse jwtResponse) {
         return userService.login(requestDto, jwtResponse);
     }
 

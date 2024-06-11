@@ -67,6 +67,7 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/bets/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/points/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/schedules/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
                         .anyRequest().authenticated());
         // CSRF 설정
         http.csrf(AbstractHttpConfigurer::disable);

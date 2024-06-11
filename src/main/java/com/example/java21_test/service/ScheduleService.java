@@ -33,7 +33,8 @@ public class ScheduleService {
     private final RestTemplateUtil restTemplateUtil;
 //    api 읽기, 값 저장, 값 가져오기, leagueId 확인
 
-    public PageResponseDto saveLeagueSchedules() {
+    @Transactional
+    public PageResponseDto<LeagueScheduleResponseDto> saveLeagueSchedules() {
         log.info("리그스케쥴 업데이트");
         List<String> leagueIdList = new ArrayList<>();
         leagueIdList.add("98767975604431411"); //world
@@ -50,18 +51,19 @@ public class ScheduleService {
         return getLeagueSchedules(10, 0);
     }
 
-    public PageResponseDto getLeagueSchedules(Integer size, Integer page) {
+    public PageResponseDto<LeagueScheduleResponseDto> getLeagueSchedules(Integer size, Integer page) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startTime"));
         Page<Schedule> scheduleList = scheduleRepository.findAllByOrderByStartTimeDesc(pageable);
         if (scheduleList.isEmpty()) {
             // 비어 있다면 적절한 응답을 반환
-            return new PageResponseDto(HttpStatus.NOT_FOUND.value(), "No schedules found for the league", null);
+            return new PageResponseDto<>(HttpStatus.NOT_FOUND.value(), "No schedules found for the league");
         }
         Page<LeagueScheduleResponseDto> leagueScheduleResponseDto = scheduleList.map(LeagueScheduleMapper::toDto);
 
-        return new PageResponseDto(HttpStatus.OK.value(), "SUCCESS", leagueScheduleResponseDto);
+        return new PageResponseDto<>(HttpStatus.OK.value(), "SUCCESS", leagueScheduleResponseDto);
     }
 
+    @Transactional
     public void saveLeagueSchedulesFromApi(String leagueId, String newer) {
         log.info("특정리그 schedule 가져오기 from api");
 
@@ -90,7 +92,7 @@ public class ScheduleService {
             JsonNode events = objectMapper.readTree(json).get("data").get("schedule").get("events");
             // newer 확인
             String newer = objectMapper.readTree(json).get("data").get("schedule").get("pages").get("newer").asText();
-            if (newer != "null") {
+            if (!newer.equals("null")) {
                 log.info("추가 페이지 확인!");
                 saveLeagueSchedulesFromApi(leagueId, newer);
             }

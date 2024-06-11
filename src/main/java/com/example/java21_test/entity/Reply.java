@@ -4,33 +4,32 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Getter
 @NoArgsConstructor
-public class Point {
+public class Reply extends Timestamped{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private Integer point;
+    private String content;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
     private User user;
 
-    @OneToMany(mappedBy = "point")
-    private List<PointLog> pointLogList = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "comment_id", nullable = false, updatable = false)
+    private Comment comment;
 
-    public Point(User user) {
-        this.point = 0;
+    public Reply(String content, User user, Comment comment) {
+        this.content = content;
         this.user = user;
+        this.comment = comment;
     }
 
-    public void update(int amount) {
-        this.point += amount;
+    public void update(String content) {
+        this.content = content;
     }
 }

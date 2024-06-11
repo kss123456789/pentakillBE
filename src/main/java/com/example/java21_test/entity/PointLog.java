@@ -7,32 +7,36 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
-public class PointLog {
+public class PointLog extends Timestamped{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int amount;
+    @Column(nullable = false)
+    private Integer amount;
 
-    private String status; // enum으로 변경가능
-    //one to one?
-    private String matchId;
+    @Column(nullable = false)
+    private String status; // enum으로 변경가능 -> 현재로서는 불가 status내에 들어있는 정보가 2가지가 되었다... 나눠야 될것 같다.
 
     @ManyToOne
-    @JoinColumn(name = "point_id")
+    @JoinColumn(name = "schedule_matchId", updatable = false)
+    private Schedule schedule;
+
+    @ManyToOne
+    @JoinColumn(name = "point_id", nullable = false, updatable = false)
     private Point point;
 
     public PointLog(int amount, String status, Point point) {
         this.amount = amount;
         this.status = status;
-        this.matchId = null;
+        this.schedule = null;
         this.point = point;
     }
 
-    public PointLog(int amount, String status, String matchId, Point point) {
+    public PointLog(int amount, String status, Schedule schedule, Point point) {
         this.amount = amount;
         this.status = status;
-        this.matchId = matchId;
+        this.schedule = schedule;
         this.point = point;
     }
 

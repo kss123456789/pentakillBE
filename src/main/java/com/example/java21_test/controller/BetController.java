@@ -1,5 +1,6 @@
 package com.example.java21_test.controller;
 
+import com.example.java21_test.dto.RecentWeeklySchedulesResponseDto;
 import com.example.java21_test.dto.StatusCodeResponseDto;
 import com.example.java21_test.impl.UserDetailsImpl;
 import com.example.java21_test.service.BetService;
@@ -20,13 +21,13 @@ public class BetController {
 
     // 최근 토너먼트 저장
     @GetMapping("/saveTournaments")
-    public StatusCodeResponseDto<?> saveTournaments() {
+    public StatusCodeResponseDto<Void> saveTournaments() {
         return betService.saveTournaments();
     }
 
     // 최근 진행중 또는 진행될 토너먼트의 주차별 일정
     @GetMapping("/recentTournament/schedules")
-    public StatusCodeResponseDto<?> getRecentTournamentSchedules(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public StatusCodeResponseDto<RecentWeeklySchedulesResponseDto> getRecentTournamentSchedules(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         return betService.getRecentTournamentSchedules(userDetails);
     }
 

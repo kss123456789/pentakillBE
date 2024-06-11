@@ -10,10 +10,10 @@ public class PageResponseDto<T> {
     private int statusCode;
     private String message;
     private final List<T> data;
-    private int currentPage;
-    private int totalPages;
-    private long totalElements;
-    private int pageSize;
+    private int currentPage = 0;
+    private int totalPages = 0;
+    private long totalElements = 0l;
+    private int pageSize = 0;
 
     public PageResponseDto(int statusCode, String message, Page<T> data) {
         this.statusCode = statusCode;
@@ -23,5 +23,11 @@ public class PageResponseDto<T> {
         this.totalPages = data.getTotalPages();
         this.totalElements = data.getTotalElements();
         this.pageSize = data.getSize();
+    }
+
+    public PageResponseDto(int statusCode, String message) {
+        this.statusCode = statusCode;
+        this.message = message;
+        this.data = null;
     }
 }

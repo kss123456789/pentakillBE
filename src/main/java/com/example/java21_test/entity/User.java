@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @NoArgsConstructor
@@ -27,14 +30,14 @@ public class User {
     @OneToOne(mappedBy = "user")
     private Point point;
 
-//    필요해서 가져올때는 전부로그가 필요할 것으로 생각되니 연결해 두는것은 좋은 생각이라고 생각함
-//    승부예측 결과
-//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-//    private List<Prediction> predictionList = new ArrayList<>();
-//
-//    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-//    private List<PointLog> pointLogList = new ArrayList<>();
+    @OneToMany(mappedBy = "user")
+    private List<Post> postList = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user")
+    private List<Comment> commentList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<Reply> replyList = new ArrayList<>();
 
     public User(String username, String email, String password) {
         this.username = username;

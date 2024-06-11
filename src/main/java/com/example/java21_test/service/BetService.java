@@ -37,7 +37,7 @@ public class BetService {
     private final PointRepository pointRepository;
     private final PointLogRepository pointLogRepository;
 
-    public StatusCodeResponseDto saveTournaments() {
+    public StatusCodeResponseDto<Void> saveTournaments() {
         log.info("최근토너먼트 업데이트");
         List<String> leagueIdList = new ArrayList<>();
         leagueIdList.add("98767975604431411"); //world
@@ -48,10 +48,10 @@ public class BetService {
             saveTournamentsFromApi(leagueId);
         }
 
-        return new StatusCodeResponseDto(HttpStatus.CREATED.value(), "recent tournament saved", null);
+        return new StatusCodeResponseDto<>(HttpStatus.CREATED.value(), "recent tournament saved");
     }
 
-    public StatusCodeResponseDto getRecentTournamentSchedules(UserDetailsImpl userDetails) {
+    public StatusCodeResponseDto<RecentWeeklySchedulesResponseDto> getRecentTournamentSchedules(UserDetailsImpl userDetails) {
         // user가 배팅했는지 아닌지 어떻게 전해주지...?
         // 1. user가 배팅한 모든 경기 리스트 전해주기
         // 2. 각 schedule에 하위에 betting true false같은 항목을 주기
@@ -64,7 +64,7 @@ public class BetService {
         Tournament tournament = tournamentRepository.findTop1ByEndDateAfterOrderByStartDateAsc(nowString).orElse(null);
         if (tournament == null) {
             // 비어 있다면 적절한 응답을 반환
-            return new StatusCodeResponseDto(HttpStatus.NOT_FOUND.value(), "No schedules found for the league", null);
+            return new StatusCodeResponseDto<>(HttpStatus.NOT_FOUND.value(), "No schedules found for the league");
         }
 
         String slug = tournament.getSlug().split("_")[0];
@@ -91,7 +91,7 @@ public class BetService {
         }
         for (Schedule schedule: scheduleList) {
             String blockName = schedule.getBlockName();
-            String matchId = schedule.getMatchId();
+            // default response 나중에 builder로 바꾸거나 하게 되면 response에서 default로 되도록하자
             boolean betting = false;
             int amount = 0;
             String teamCode = null;
@@ -99,7 +99,7 @@ public class BetService {
             float ratio1 = 0;
             float ratio2 = 0;
 
-            pointLogList = pointLogRepository.findAllByMatchId(matchId);
+            pointLogList = pointLogRepository.findAllBySchedule(schedule);
             if (pointLogList != null) {
                 for (PointLog pointLog : pointLogList) {
                     // 투표율 구하기
@@ -138,7 +138,7 @@ public class BetService {
 
         RecentWeeklySchedulesResponseDto recentWeeklySchedulesResponseDto = new RecentWeeklySchedulesResponseDto(scheduleListValueSet, scheduleListKeySet, curreentBlockIndex, totalIndex);
 
-        return new StatusCodeResponseDto(HttpStatus.OK.value(), "SUCCESS", recentWeeklySchedulesResponseDto);
+        return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "SUCCESS", recentWeeklySchedulesResponseDto);
     }
 
     @Transactional

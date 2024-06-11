@@ -11,7 +11,7 @@ public class PointLogResponseDto {
     private String status; // enum 가능
 
     public PointLogResponseDto(PointLog pointLog) {
-        this.matchId = pointLog.getMatchId();
+        this.matchId = pointLog.getSchedule().getMatchId();
         this.pointAmount = pointLog.getAmount();
         this.userEmail = pointLog.getPoint().getUser().getEmail();
         this.status = pointLog.getStatus();

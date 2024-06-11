@@ -4,33 +4,31 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Getter
 @NoArgsConstructor
-public class Point {
+public class PostLike {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Integer point;
+    private Boolean isLike; // null가능
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
     private User user;
 
-    @OneToMany(mappedBy = "point")
-    private List<PointLog> pointLogList = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "post_id", nullable = false, updatable = false)
+    private Post post;
 
-    public Point(User user) {
-        this.point = 0;
+    public PostLike(User user, Post post, Boolean isLike) {
         this.user = user;
+        this.post = post;
+        this.isLike = isLike;
     }
 
-    public void update(int amount) {
-        this.point += amount;
+    public void update(Boolean isLike) {
+        this.isLike = isLike;
     }
 }

@@ -1,5 +1,6 @@
 package com.example.java21_test.controller;
 
+import com.example.java21_test.dto.LeagueScheduleResponseDto;
 import com.example.java21_test.dto.PageResponseDto;
 import com.example.java21_test.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +17,13 @@ public class ScheduleController {
     // 전체 경기 일정
     // requestDto를 만족하지않았을때 에러 뜨게 하기!!
     @GetMapping("/saveleagues")
-    public PageResponseDto<?> saveLeagueSchedules() {
+    public PageResponseDto<LeagueScheduleResponseDto> saveLeagueSchedules() {
         return scheduleService.saveLeagueSchedules();
     }
 
     //page, size 값이 안 들어왔을 때 NullpointerException이 나온다아아 이것도 에러처리해보시지
     @GetMapping("/leagues")
-    public PageResponseDto<?> getLeagueSchedules(Integer size, Integer page) {
+    public PageResponseDto<LeagueScheduleResponseDto> getLeagueSchedules(Integer size, Integer page) {
         return scheduleService.getLeagueSchedules(size, page);
     }
 

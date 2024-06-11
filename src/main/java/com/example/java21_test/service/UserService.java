@@ -37,7 +37,7 @@ public class UserService {
 
     //회원가입
     @Transactional
-    public StatusCodeResponseDto signup(SignUpRequestDto requestDto, HttpServletResponse jwtResponse) {
+    public StatusCodeResponseDto<Void> signup(SignUpRequestDto requestDto, HttpServletResponse jwtResponse) {
         String username = requestDto.getUsername();
         String email = requestDto.getEmail();
         String password = passwordEncoder.encode(requestDto.getPassword());
@@ -71,11 +71,11 @@ public class UserService {
         // Jwt Header
         jwtUtil.addJwtToHeader(token, jwtResponse);
 
-        return new StatusCodeResponseDto(HttpStatus.CREATED.value(), "회원가입 성공");
+        return new StatusCodeResponseDto<>(HttpStatus.CREATED.value(), "회원가입 성공");
     }
 
     //    //로그인    security filter에서 하는 방법도 있는데 이게 더 맞는 방법.
-    public StatusCodeResponseDto login(LogInRequestDto requestDto, HttpServletResponse jwtResponse) {
+    public StatusCodeResponseDto<Void> login(LogInRequestDto requestDto, HttpServletResponse jwtResponse) {
         String email = requestDto.getEmail();
         String password = requestDto.getPassword();
 
@@ -94,6 +94,6 @@ public class UserService {
 //        // Jwt Header
         jwtUtil.addJwtToHeader(token, jwtResponse);
 
-        return new StatusCodeResponseDto(HttpStatus.OK.value(), "로그인 성공");
+        return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "로그인 성공");
     }
 }
