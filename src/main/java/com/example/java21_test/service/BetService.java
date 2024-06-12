@@ -110,8 +110,8 @@ public class BetService {
                     if (pointLog.getPoint().equals(point)) {
                         betting = true;
                         amount = pointLog.getAmount();
-                        teamCode = pointLog.getStatus().split(" ")[1];
-                        status = pointLog.getStatus().split(" ")[2];
+                        teamCode = pointLog.getTeamCode();
+                        status = pointLog.getStatus();
                     }
                 }
             }
@@ -193,7 +193,7 @@ public class BetService {
         String team1Code = schedule.getTeam1Code();
         String team2Code = schedule.getTeam2Code();
         for (PointLog pointLog : pointLogList) {
-            String bettingTeam = pointLog.getStatus().split(" ")[1];
+            String bettingTeam = pointLog.getTeamCode();
             if (bettingTeam.equals(team1Code)) {
                 betting1 += 1;
             }

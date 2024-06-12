@@ -50,7 +50,7 @@ public class PointService {
         if (!schedule.getState().equals("unstarted")) {
             return new StatusCodeResponseDto<>(HttpStatus.BAD_REQUEST.value(), "schedule is started");
         }
-        PointLog pointLog = new PointLog(amount, String.format("betting %s unstarted", teamCode), schedule, point);
+        PointLog pointLog = new PointLog(amount, teamCode, schedule.getState(), schedule, point);
         point.update(-amount);
         pointLogRepository.save(pointLog);
         pointLog = pointLogRepository.findByScheduleAndPoint(schedule, point).orElseThrow(() ->
@@ -78,11 +78,11 @@ public class PointService {
             List<PointLog> pointLogList = pointLogRepository.findAllBySchedule(schedule);
             Map<String, Float> oddsMap = getOdds(schedule, pointLogList);
             for (PointLog pointLog : pointLogList) {
-                String[] statusStrings = pointLog.getStatus().split(" ");
-                if (statusStrings.length > 2) {
+                String status = pointLog.getStatus();
+                if (!status.equals("unstarted")) {
                     continue;
                 }
-                String bettingTeam = statusStrings[1];
+                String bettingTeam = pointLog.getTeamCode();
                 if ((team1Outcome.equals("win") && bettingTeam.equals(team1Code))
                         || (team2Outcome.equals("win") && bettingTeam.equals(team2Code))) {
                     float odds = oddsMap.get(bettingTeam);
@@ -106,7 +106,7 @@ public class PointService {
         String team2Code = schedule.getTeam2Code();
         for (PointLog pointLog : pointLogList) {
             int amount = pointLog.getAmount();
-            String bettingTeam = pointLog.getStatus().split(" ")[1];
+            String bettingTeam = pointLog.getTeamCode();
             if (bettingTeam.equals(team1Code)) {
                 betting1 += amount;
             }

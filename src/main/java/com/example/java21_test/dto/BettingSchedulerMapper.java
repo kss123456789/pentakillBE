@@ -17,10 +17,10 @@ public class BettingSchedulerMapper{
                 new Result(schedule.getTeam2Outcome(), schedule.getTeam2GameWins()),
                 new Record(schedule.getTeam2RecordWins(), schedule.getTeam2RecordLosses()), ratio2);
 
-        MatchRatio matchRatio = new MatchRatio(schedule.getMatchId(), null, List.of(team1, team2),
+        MatchRatio matchRatio = new MatchRatio(schedule.getMatchId(), betting, amount, teamCode, status, List.of(team1, team2),
                 new Strategy(schedule.getMatchStrategyType(), schedule.getMatchStrategyCount()));
 
         return new BettingScheduleResponseDto(schedule.getStartTime(), schedule.getState(), schedule.getType(),
-                schedule.getBlockName(), betting, amount, teamCode, status, league, matchRatio);
+                schedule.getBlockName(), league, matchRatio);
     }
 }

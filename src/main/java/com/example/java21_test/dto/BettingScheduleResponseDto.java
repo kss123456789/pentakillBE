@@ -10,29 +10,16 @@ public class BettingScheduleResponseDto {
     private String state;
     private String type;
     private String blockName;
-
-    private boolean betting;
-    private int amount;
-    private String teamCode;
-    private String status;
-
     private League league;
     private MatchRatio match;
 
     public BettingScheduleResponseDto(String startTime, String state, String type, String blockName,
-                                      boolean betting, int amount, String teamCode, String status,
                                      League league, MatchRatio match) {
 
         this.startTime = startTime;
         this.state = state;
         this.type = type;
         this.blockName = blockName;
-
-        this.betting = betting;
-        this.amount = amount;
-        this.teamCode = teamCode;
-        this.status = status;
-
         this.league = league;
         this.match = match;
     }
@@ -42,13 +29,20 @@ public class BettingScheduleResponseDto {
 @Getter
 class MatchRatio {
     private String id;
-    private List<String> flags;
     private List<TeamRatio> teams;
     private Strategy strategy;
 
-    public MatchRatio(String id, List<String> flags, List<TeamRatio> teams, Strategy strategy) {
+    private boolean betting;
+    private int amount;
+    private String teamCode;
+    private String status;
+
+    public MatchRatio(String id, boolean betting, int amount, String teamCode, String status, List<TeamRatio> teams, Strategy strategy) {
         this.id = id;
-        this.flags = flags;
+        this.betting = betting;
+        this.amount = amount;
+        this.teamCode = teamCode;
+        this.status = status;
         this.teams = teams;
         this.strategy = strategy;
     }

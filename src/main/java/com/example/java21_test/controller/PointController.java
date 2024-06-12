@@ -20,9 +20,13 @@ public class PointController {
 
     @PostMapping("/bettings")
     public StatusCodeResponseDto<PointLogResponseDto> pointBetting(@RequestBody PointBettngRequestDto pointBettngRequestDto,
-                                                                                @AuthenticationPrincipal UserDetailsImpl userDetails) {
+                                                                   @AuthenticationPrincipal UserDetailsImpl userDetails) {
         return pointService.pointBetting(pointBettngRequestDto, userDetails.getUser());
     }
+    // 포인트 취소?
+    //    @DeleteMapping("/bettings")
+    //    public StatusCodeResponseDto<Void> cancelBetting(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+    //    }
 
     @GetMapping("/checkingOdds")
     public StatusCodeResponseDto<Void> checkOdds(String matchId) {

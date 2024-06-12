@@ -15,6 +15,8 @@ public class PointLog extends Timestamped{
     @Column(nullable = false)
     private Integer amount;
 
+    private String teamCode;
+
     @Column(nullable = false)
     private String status; // enum으로 변경가능 -> 현재로서는 불가 status내에 들어있는 정보가 2가지가 되었다... 나눠야 될것 같다.
 
@@ -28,13 +30,15 @@ public class PointLog extends Timestamped{
 
     public PointLog(int amount, String status, Point point) {
         this.amount = amount;
+        this.teamCode = null;
         this.status = status;
         this.schedule = null;
         this.point = point;
     }
 
-    public PointLog(int amount, String status, Schedule schedule, Point point) {
+    public PointLog(int amount, String teamCode, String status, Schedule schedule, Point point) {
         this.amount = amount;
+        this.teamCode = teamCode;
         this.status = status;
         this.schedule = schedule;
         this.point = point;

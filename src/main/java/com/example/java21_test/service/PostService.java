@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final S3Service s3Service;
 
     @Transactional
     public StatusCodeResponseDto<PostResponseDto> createPost(PostRequestDto postRequestDto,
@@ -28,6 +29,8 @@ public class PostService {
         String title = postRequestDto.getTitle();
         String content = postRequestDto.getContent();
         Post post = new Post(title, content, user);
+        String newContent = s3Service.moveTempFilesToPermanent(content);
+        post.update(title, newContent);
         Post savePost = postRepository.save(post);
 
         PostResponseDto postResponseDto = PostMapper.toDto(savePost, user);
@@ -64,7 +67,8 @@ public class PostService {
         }
         String title = postRequestDto.getTitle();
         String content = postRequestDto.getContent();
-        post.update(title, content);
+        String newContent = s3Service.moveTempFilesToPermanent(content);
+        post.update(title, newContent);
         postRepository.flush();
         PostResponseDto postResponseDto = PostMapper.toDto(post, user);
         return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "게시글 수정 완료", postResponseDto);
