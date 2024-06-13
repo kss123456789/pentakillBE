@@ -1,8 +1,8 @@
 package com.example.java21_test.controller;
 
-import com.example.java21_test.dto.PointBettngRequestDto;
-import com.example.java21_test.dto.PointLogResponseDto;
-import com.example.java21_test.dto.StatusCodeResponseDto;
+import com.example.java21_test.dto.requestDto.PointBettngRequestDto;
+import com.example.java21_test.dto.responseDto.PointLogResponseDto;
+import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.impl.UserDetailsImpl;
 import com.example.java21_test.service.PointService;
 import lombok.RequiredArgsConstructor;

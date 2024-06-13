@@ -1,6 +1,10 @@
 package com.example.java21_test.service;
 
-import com.example.java21_test.dto.*;
+import com.example.java21_test.dto.requestDto.CommentRequestDto;
+import com.example.java21_test.dto.responseDto.CommentMapper;
+import com.example.java21_test.dto.responseDto.CommentResponseDto;
+import com.example.java21_test.dto.responseDto.PageResponseDto;
+import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.entity.Comment;
 import com.example.java21_test.entity.Post;
 import com.example.java21_test.entity.User;

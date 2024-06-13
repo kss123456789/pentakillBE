@@ -1,8 +1,8 @@
 package com.example.java21_test.service;
 
-import com.example.java21_test.dto.LogInRequestDto;
-import com.example.java21_test.dto.SignUpRequestDto;
-import com.example.java21_test.dto.StatusCodeResponseDto;
+import com.example.java21_test.dto.requestDto.LogInRequestDto;
+import com.example.java21_test.dto.requestDto.SignUpRequestDto;
+import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.entity.Point;
 import com.example.java21_test.entity.PointLog;
 import com.example.java21_test.entity.User;

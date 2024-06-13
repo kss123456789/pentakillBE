@@ -1,9 +1,9 @@
 package com.example.java21_test.controller;
 
-import com.example.java21_test.dto.PageResponseDto;
-import com.example.java21_test.dto.ReplyRequestDto;
-import com.example.java21_test.dto.ReplyResponseDto;
-import com.example.java21_test.dto.StatusCodeResponseDto;
+import com.example.java21_test.dto.responseDto.PageResponseDto;
+import com.example.java21_test.dto.requestDto.ReplyRequestDto;
+import com.example.java21_test.dto.responseDto.ReplyResponseDto;
+import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.impl.UserDetailsImpl;
 import com.example.java21_test.service.ReplyService;
 import lombok.RequiredArgsConstructor;

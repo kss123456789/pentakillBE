@@ -1,9 +1,9 @@
 package com.example.java21_test.controller;
 
-import com.example.java21_test.dto.PageResponseDto;
-import com.example.java21_test.dto.PostRequestDto;
-import com.example.java21_test.dto.PostResponseDto;
-import com.example.java21_test.dto.StatusCodeResponseDto;
+import com.example.java21_test.dto.responseDto.PageResponseDto;
+import com.example.java21_test.dto.requestDto.PostRequestDto;
+import com.example.java21_test.dto.responseDto.PostResponseDto;
+import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.impl.UserDetailsImpl;
 import com.example.java21_test.service.PostService;
 import com.example.java21_test.service.S3Service;
@@ -60,8 +60,8 @@ public class PostController {
         return s3Service.upload(files);
     }
 
-    @GetMapping("/deleteTemp")
-    public StatusCodeResponseDto<?> deleteTemp() {
-        return s3Service.deleteOldTempFiles();
-    }
+//    @GetMapping("/deleteTemp")
+//    public StatusCodeResponseDto<?> deleteTemp() {
+//        return s3Service.deleteOldTempFiles();
+//    }
 }

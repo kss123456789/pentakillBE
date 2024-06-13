@@ -1,6 +1,9 @@
 package com.example.java21_test.controller;
 
-import com.example.java21_test.dto.*;
+import com.example.java21_test.dto.requestDto.CommentRequestDto;
+import com.example.java21_test.dto.responseDto.CommentResponseDto;
+import com.example.java21_test.dto.responseDto.PageResponseDto;
+import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.impl.UserDetailsImpl;
 import com.example.java21_test.service.CommentService;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +28,7 @@ public class CommentController {
 
     @GetMapping()
     public PageResponseDto<CommentResponseDto> getCommentPage(@PathVariable Long postId,
-                                                           Integer size, Integer page) {
+                                                              Integer size, Integer page) {
         return commentService.getCommentPage(postId, size, page);
     }
 

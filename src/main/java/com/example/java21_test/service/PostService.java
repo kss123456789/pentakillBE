@@ -1,6 +1,10 @@
 package com.example.java21_test.service;
 
-import com.example.java21_test.dto.*;
+import com.example.java21_test.dto.requestDto.PostRequestDto;
+import com.example.java21_test.dto.responseDto.PageResponseDto;
+import com.example.java21_test.dto.responseDto.PostMapper;
+import com.example.java21_test.dto.responseDto.PostResponseDto;
+import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.entity.Post;
 import com.example.java21_test.entity.User;
 import com.example.java21_test.impl.UserDetailsImpl;
@@ -25,7 +29,7 @@ public class PostService {
 
     @Transactional
     public StatusCodeResponseDto<PostResponseDto> createPost(PostRequestDto postRequestDto,
-                                               User user) {
+                                                             User user) {
         String title = postRequestDto.getTitle();
         String content = postRequestDto.getContent();
         Post post = new Post(title, content, user);
@@ -82,6 +86,7 @@ public class PostService {
         if (!post.getUser().getId().equals(user.getId())) {
             return new StatusCodeResponseDto<>(HttpStatus.FORBIDDEN.value(), "작성자가 아닙니다.");
         }
+        s3Service.deletePermanentFile(post.getContent());
         postRepository.delete(post);
         return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "게시글 삭제 완료");
     }

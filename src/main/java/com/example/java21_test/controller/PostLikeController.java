@@ -1,7 +1,7 @@
 package com.example.java21_test.controller;
 
-import com.example.java21_test.dto.PostLikeResponseDto;
-import com.example.java21_test.dto.StatusCodeResponseDto;
+import com.example.java21_test.dto.responseDto.PostLikeResponseDto;
+import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.impl.UserDetailsImpl;
 import com.example.java21_test.service.PostLikeService;
 import lombok.RequiredArgsConstructor;

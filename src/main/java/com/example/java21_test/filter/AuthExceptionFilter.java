@@ -1,6 +1,6 @@
 package com.example.java21_test.filter;
 
-import com.example.java21_test.dto.StatusCodeResponseDto;
+import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;

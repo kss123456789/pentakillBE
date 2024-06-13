@@ -1,7 +1,7 @@
 package com.example.java21_test.controller;
 
-import com.example.java21_test.dto.LeagueScheduleResponseDto;
-import com.example.java21_test.dto.PageResponseDto;
+import com.example.java21_test.dto.responseDto.LeagueScheduleResponseDto;
+import com.example.java21_test.dto.responseDto.PageResponseDto;
 import com.example.java21_test.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,10 +16,10 @@ public class ScheduleController {
 
     // 전체 경기 일정
     // requestDto를 만족하지않았을때 에러 뜨게 하기!!
-    @GetMapping("/saveleagues")
-    public PageResponseDto<LeagueScheduleResponseDto> saveLeagueSchedules() {
-        return scheduleService.saveLeagueSchedules();
-    }
+//    @GetMapping("/saveleagues")
+//    public PageResponseDto<LeagueScheduleResponseDto> saveLeagueSchedules() {
+//        return scheduleService.saveLeagueSchedules();
+//    }
 
     //page, size 값이 안 들어왔을 때 NullpointerException이 나온다아아 이것도 에러처리해보시지
     @GetMapping("/leagues")

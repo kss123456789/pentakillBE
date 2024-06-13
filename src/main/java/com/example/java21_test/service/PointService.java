@@ -1,8 +1,8 @@
 package com.example.java21_test.service;
 
-import com.example.java21_test.dto.PointBettngRequestDto;
-import com.example.java21_test.dto.PointLogResponseDto;
-import com.example.java21_test.dto.StatusCodeResponseDto;
+import com.example.java21_test.dto.requestDto.PointBettngRequestDto;
+import com.example.java21_test.dto.responseDto.PointLogResponseDto;
+import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.entity.Point;
 import com.example.java21_test.entity.PointLog;
 import com.example.java21_test.entity.Schedule;

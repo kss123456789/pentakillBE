@@ -1,7 +1,7 @@
 package com.example.java21_test.service;
 
-import com.example.java21_test.dto.PostLikeResponseDto;
-import com.example.java21_test.dto.StatusCodeResponseDto;
+import com.example.java21_test.dto.responseDto.PostLikeResponseDto;
+import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.entity.Post;
 import com.example.java21_test.entity.PostLike;
 import com.example.java21_test.entity.User;

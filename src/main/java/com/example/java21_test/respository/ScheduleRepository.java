@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
-
-    List<Schedule> findAllByLeagueSlugAndStartTimeAfterOrderByStartTimeAsc(String slug, String startDate);
+    Optional<Schedule> findTop1ByLeagueSlugAndStartTimeAfterOrderByStartTimeAsc(String slug, String startDate);
+    List<Schedule> findAllByLeagueSlugAndStartTimeBetweenOrderByStartTimeAsc(String slug, String startDate, String endDate);
     Page<Schedule> findAllByOrderByStartTimeDesc(Pageable pageable);
     Optional<Schedule> findByMatchId(String matchId);
 

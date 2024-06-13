@@ -1,6 +1,6 @@
 package com.example.java21_test.service;
 
-import com.example.java21_test.dto.StatusCodeResponseDto;
+import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import io.awspring.cloud.s3.ObjectMetadata;
 import io.awspring.cloud.s3.S3Operations;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +12,7 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Slf4j(topic = "reply CRUD")
+@Slf4j(topic = "S3 service")
 @Service
 @RequiredArgsConstructor
 public class S3Service {
@@ -82,6 +83,19 @@ public class S3Service {
     }
 
     @Transactional
+    public void deletePermanentFile(String content) {
+        Document doc = Jsoup.parse(content);
+        Elements imgs = doc.select("img");
+        for (Element img : imgs) {
+            String tempUrl = img.attr("src");
+            String fileName = tempUrl.substring(tempUrl.lastIndexOf("/") + 1);
+            String permanentFileName = PERMANENT_FOLDER + fileName;
+
+            s3Operations.deleteObject(bucket, permanentFileName);
+        }
+    }
+
+    @Transactional
     public void copyObject(String sourceBucket, String sourceKey, String destinationBucket, String destinationKey) {
         CopyObjectRequest copyObjectRequest = CopyObjectRequest.builder()
                 .sourceBucket(sourceBucket)
@@ -93,8 +107,10 @@ public class S3Service {
         s3Client.copyObject(copyObjectRequest);
     }
 
+    // 매일 정오에 24시간 지난 temp파일 정리 최대 48시간 가량 남아있을 수 있음
+    @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
-    public StatusCodeResponseDto<?> deleteOldTempFiles() {
+    public void deleteOldTempFiles() {
         ListObjectsRequest listObjectsRequest = ListObjectsRequest.builder()
                 .bucket(bucket)
                 .prefix(TEMP_FOLDER)
@@ -102,13 +118,13 @@ public class S3Service {
         List<S3Object> listObjectsResponse = s3Client.listObjects(listObjectsRequest).contents();
         for (S3Object s3Object : listObjectsResponse) {
             Instant lastModified = s3Object.lastModified();
-            long days = Duration.between(lastModified, Instant.now()).toDays();
-            if (days > 1) {
+            long hours = Duration.between(lastModified, Instant.now()).toHours();
+            if (hours > 24) {
                 String key = s3Object.key();
                 log.info(key);
                 s3Operations.deleteObject(bucket, key);
             }
         }
-        return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "삭제 성공");
+//        return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "삭제 성공");
     }
 }

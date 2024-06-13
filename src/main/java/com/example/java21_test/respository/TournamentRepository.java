@@ -4,6 +4,7 @@ import com.example.java21_test.entity.Schedule;
 import com.example.java21_test.entity.Tournament;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.Instant;
 import java.util.Optional;
 
 public interface TournamentRepository extends JpaRepository<Tournament, String> {
