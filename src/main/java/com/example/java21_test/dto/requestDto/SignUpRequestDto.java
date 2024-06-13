@@ -1,4 +1,4 @@
-package com.example.java21_test.dto;
+package com.example.java21_test.dto.requestDto;
 
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;

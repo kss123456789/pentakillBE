@@ -1,4 +1,4 @@
-package com.example.java21_test.dto;
+package com.example.java21_test.dto.responseDto;
 
 import lombok.Getter;
 import org.springframework.data.domain.Page;

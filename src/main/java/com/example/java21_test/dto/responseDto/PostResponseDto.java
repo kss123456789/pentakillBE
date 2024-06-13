@@ -1,4 +1,4 @@
-package com.example.java21_test.dto;
+package com.example.java21_test.dto.responseDto;
 
 import com.example.java21_test.entity.Post;
 import lombok.Getter;
