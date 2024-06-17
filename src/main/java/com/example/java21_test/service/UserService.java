@@ -11,6 +11,9 @@ import com.example.java21_test.respository.PointRepository;
 import com.example.java21_test.respository.UserRepository;
 import com.example.java21_test.util.JwtUtil;
 import com.example.java21_test.util.PointUtil;
+import com.example.java21_test.util.RedisUtil;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,14 +33,11 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final PointUtil pointUtil;
-
-//    @Value("${adimin.token}") // Base64 Encode 한 SecretKey
-//    private String ADMIN_TOKEN;
-    // Access_Token,  Refresh_Token
+    private final RedisUtil redisUtil;
 
     //회원가입
     @Transactional
-    public StatusCodeResponseDto<Void> signup(SignUpRequestDto requestDto, HttpServletResponse jwtResponse) {
+    public StatusCodeResponseDto<Void> signup(SignUpRequestDto requestDto, HttpServletResponse httpServletResponse) {
         String username = requestDto.getUsername();
         String email = requestDto.getEmail();
         String password = passwordEncoder.encode(requestDto.getPassword());
@@ -63,19 +63,15 @@ public class UserService {
         // 가입 포인트
         PointLog welcomePointLog = new PointLog(1000, "signUp", point); // enum사용으로 바꾸기...
         pointUtil.getPoint(welcomePointLog);
-
         pointLogRepository.save(welcomePointLog);
-
-        // Jwt 토큰 생성, response에 넣기
-        String token = jwtUtil.createToken(user, point);
-        // Jwt Header
-        jwtUtil.addJwtToHeader(token, jwtResponse);
+        // access token, refresh 토큰 발급
+        addTokensToHeader(user, point, httpServletResponse);
 
         return new StatusCodeResponseDto<>(HttpStatus.CREATED.value(), "회원가입 성공");
     }
 
     //    //로그인    security filter에서 하는 방법도 있는데 이게 더 맞는 방법.
-    public StatusCodeResponseDto<Void> login(LogInRequestDto requestDto, HttpServletResponse jwtResponse) {
+    public StatusCodeResponseDto<Void> login(LogInRequestDto requestDto, HttpServletResponse httpServletResponse) {
         String email = requestDto.getEmail();
         String password = requestDto.getPassword();
 
@@ -88,12 +84,45 @@ public class UserService {
         }
         Point point = pointRepository.findByUser(user).orElseThrow(() ->
                 new IllegalArgumentException("포인트가 존재하지 않습니다."));
-
-        // Jwt 토큰 생성, response에 넣기
-        String token = jwtUtil.createToken(user, point);
-//        // Jwt Header
-        jwtUtil.addJwtToHeader(token, jwtResponse);
+        // access token, refresh 토큰 발급
+        addTokensToHeader(user, point, httpServletResponse);
 
         return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "로그인 성공");
+    }
+
+    public StatusCodeResponseDto<Void> reissue(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        // refresh 토큰 유효성 검사
+        String refreshToken = jwtUtil.getRefreshTokenFromRequest(httpServletRequest);
+        String tokenValue = jwtUtil.substringToken(refreshToken);
+        boolean isValidate = jwtUtil.validateToken(tokenValue);
+        // 이전 토큰 삭제
+        if (isValidate) {
+            redisUtil.deleteRefreshToken(refreshToken); // refresh 토큰 없다 오류 가능
+        } else {
+            return new StatusCodeResponseDto<>(HttpStatus.UNAUTHORIZED.value(), "Refresh token is not validated");
+        }
+        // refresh token으로부터 email 가져오기
+        Claims info = jwtUtil.getUserInfoFromToken(tokenValue);
+        String email = info.get("email", String.class);
+
+        // 사용자 확인, point 확인
+        User user = userRepository.findByEmail(email).orElseThrow(() -> //Optional<T>에 orElseThrow 메서드는 결과값이 T로 나온다 (User)
+                new IllegalArgumentException("회원을 찾을 수 없습니다."));
+        Point point = pointRepository.findByUser(user).orElseThrow(() ->
+                new IllegalArgumentException("포인트가 존재하지 않습니다."));
+        // access token, refresh 토큰 발급
+        addTokensToHeader(user, point, httpServletResponse);
+
+        return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "재발급 성공");
+    }
+
+    public void addTokensToHeader(User user, Point point, HttpServletResponse httpServletResponse) {
+        // access 토큰 생성, header에 넣기
+        String accessToken = jwtUtil.createAccessToken(user, point);
+        jwtUtil.addAccessTokenToHeader(accessToken, httpServletResponse);
+        // refresh 토큰 생성, header에 넣기, redis에 저장
+        String refreshToken = jwtUtil.createRefreshToken(user);
+        jwtUtil.addRefreshTokenToHeader(refreshToken, httpServletResponse);
+        redisUtil.setRefreshToken(refreshToken);
     }
 }

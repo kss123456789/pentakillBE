@@ -10,11 +10,11 @@ public class BettingScheduleResponseDto {
     private String state;
     private String type;
     private String blockName;
-    private League league;
+    private LeagueScheduleResponseDto.League league;
     private MatchRatio match;
 
     public BettingScheduleResponseDto(String startTime, String state, String type, String blockName,
-                                     League league, MatchRatio match) {
+                                      LeagueScheduleResponseDto.League league, MatchRatio match) {
 
         this.startTime = startTime;
         this.state = state;
@@ -23,37 +23,41 @@ public class BettingScheduleResponseDto {
         this.league = league;
         this.match = match;
     }
-}
 
+    @Getter
+    public static class MatchRatio {
+        private String id;
+        private List<TeamRatio> teams;
+        private LeagueScheduleResponseDto.Strategy strategy;
 
-@Getter
-class MatchRatio {
-    private String id;
-    private List<TeamRatio> teams;
-    private Strategy strategy;
+        private boolean betting;
+        private int amount;
+        private String teamCode;
+        private String status;
 
-    private boolean betting;
-    private int amount;
-    private String teamCode;
-    private String status;
-
-    public MatchRatio(String id, boolean betting, int amount, String teamCode, String status, List<TeamRatio> teams, Strategy strategy) {
-        this.id = id;
-        this.betting = betting;
-        this.amount = amount;
-        this.teamCode = teamCode;
-        this.status = status;
-        this.teams = teams;
-        this.strategy = strategy;
+        public MatchRatio(String id, boolean betting, int amount, String teamCode, String status,
+                          List<TeamRatio> teams, LeagueScheduleResponseDto.Strategy strategy) {
+            this.id = id;
+            this.betting = betting;
+            this.amount = amount;
+            this.teamCode = teamCode;
+            this.status = status;
+            this.teams = teams;
+            this.strategy = strategy;
+        }
     }
-}
 
 
-@Getter
-class TeamRatio extends Team {
-    private float ratio;
-    public TeamRatio(String name, String code, String image, Result result, Record record, float ratio) {
-        super(name, code, image, result, record);
-        this.ratio =ratio;
+    @Getter
+    public static class TeamRatio extends LeagueScheduleResponseDto.Team {
+        private float ratio;
+        private float probability;
+        public TeamRatio(String name, String code, String image, LeagueScheduleResponseDto.Result result, LeagueScheduleResponseDto.Record record,
+                         float ratio, float probability) {
+            super(name, code, image, result, record);
+            this.ratio = ratio;
+            this.probability = probability;
+        }
     }
+
 }

@@ -1,5 +1,6 @@
-package com.example.java21_test.dto.responseDto;
+package com.example.java21_test.dto.mapper;
 
+import com.example.java21_test.dto.responseDto.PostResponseDto;
 import com.example.java21_test.entity.Comment;
 import com.example.java21_test.entity.Post;
 import com.example.java21_test.entity.PostLike;
@@ -23,9 +24,9 @@ public class PostMapper {
                 isLike = checkLike;
             }
             if (checkLike != null) {
-                if (checkLike.booleanValue()) {
+                if (checkLike) {
                     likeCount++;
-                } else if (!checkLike.booleanValue()) {
+                } else {
                     dislikeCount++;
                 }
             }
@@ -37,9 +38,8 @@ public class PostMapper {
         Instant modifiedAt = post.getModifiedAt();
         String nickname = post.getUser().getUsername();
 
-        PostResponseDto postResponseDto = new PostResponseDto(id, title, content,
+        return new PostResponseDto(id, title, content,
                 isLike, likeCount, dislikeCount, commentCount, views,
                 createAt, modifiedAt, nickname);
-        return postResponseDto;
     }
 }

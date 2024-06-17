@@ -1,5 +1,6 @@
-package com.example.java21_test.dto.responseDto;
+package com.example.java21_test.dto.mapper;
 
+import com.example.java21_test.dto.responseDto.CommentResponseDto;
 import com.example.java21_test.entity.Comment;
 
 import java.time.Instant;

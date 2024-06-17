@@ -1,7 +1,7 @@
 package com.example.java21_test.service;
 
+import com.example.java21_test.dto.mapper.CommentMapper;
 import com.example.java21_test.dto.requestDto.CommentRequestDto;
-import com.example.java21_test.dto.responseDto.CommentMapper;
 import com.example.java21_test.dto.responseDto.CommentResponseDto;
 import com.example.java21_test.dto.responseDto.PageResponseDto;
 import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
@@ -32,7 +32,6 @@ public class CommentService {
     public StatusCodeResponseDto<CommentResponseDto> createComment(Long postId, CommentRequestDto commentRequestDto, User user) {
         Post post = postRepository.findById(postId).orElseThrow(() ->
                 new IllegalArgumentException("게시글을 찾을 수 없습니다."));
-
         String content = commentRequestDto.getContent();
         Comment comment = new Comment(content, user, post);
         commentRepository.save(comment);

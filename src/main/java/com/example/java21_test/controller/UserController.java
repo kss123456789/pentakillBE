@@ -5,13 +5,11 @@ import com.example.java21_test.dto.requestDto.LogInRequestDto;
 import com.example.java21_test.dto.requestDto.SignUpRequestDto;
 import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
@@ -29,6 +27,12 @@ public class UserController {
     @PostMapping("/login")
     public StatusCodeResponseDto<Void> login(@RequestBody LogInRequestDto requestDto, HttpServletResponse jwtResponse) {
         return userService.login(requestDto, jwtResponse);
+    }
+
+    // refresh 재발급
+    @GetMapping("/refresh")
+    public StatusCodeResponseDto<Void> reissue(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        return userService.reissue(httpServletRequest, httpServletResponse);
     }
 
 }

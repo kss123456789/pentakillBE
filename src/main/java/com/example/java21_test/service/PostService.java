@@ -2,7 +2,7 @@ package com.example.java21_test.service;
 
 import com.example.java21_test.dto.requestDto.PostRequestDto;
 import com.example.java21_test.dto.responseDto.PageResponseDto;
-import com.example.java21_test.dto.responseDto.PostMapper;
+import com.example.java21_test.dto.mapper.PostMapper;
 import com.example.java21_test.dto.responseDto.PostResponseDto;
 import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.entity.Post;
@@ -33,9 +33,10 @@ public class PostService {
         String title = postRequestDto.getTitle();
         String content = postRequestDto.getContent();
         Post post = new Post(title, content, user);
+        Post savePost = postRepository.save(post);
+        // post 작성시에 에러 발생하면 하단의 이미지 이동도 일어나지 않음
         String newContent = s3Service.moveTempFilesToPermanent(content);
         post.update(title, newContent);
-        Post savePost = postRepository.save(post);
 
         PostResponseDto postResponseDto = PostMapper.toDto(savePost, user);
 

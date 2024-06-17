@@ -107,8 +107,8 @@ public class S3Service {
         s3Client.copyObject(copyObjectRequest);
     }
 
-    // 매일 정오에 24시간 지난 temp파일 정리 최대 48시간 가량 남아있을 수 있음
-    @Scheduled(cron = "0 0 0 * * ?")
+    // 매일 5시에 24시간 지난 temp파일 정리 최대 48시간 가량 남아있을 수 있음
+    @Scheduled(cron = "0 0 5 * * ?")
     @Transactional
     public void deleteOldTempFiles() {
         ListObjectsRequest listObjectsRequest = ListObjectsRequest.builder()
@@ -125,6 +125,5 @@ public class S3Service {
                 s3Operations.deleteObject(bucket, key);
             }
         }
-//        return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "삭제 성공");
     }
 }

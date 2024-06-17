@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -25,32 +26,20 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {  //무조건 
 
     private final JwtUtil jwtUtil;
     private final UserDetailsServiceImpl userDetailsService;
-
-//    public JwtAuthorizationFilter(JwtUtil jwtUtil, UserDetailsServiceImpl userDetailsService) {
-//        this.jwtUtil = jwtUtil;
-//        this.userDetailsService = userDetailsService;
-//    }
-//    @Override   //아예 필터를 거치지 않게하는 방법 중 하나.
-//    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-//        String excludePath = "/users";
-//        String path = request.getRequestURI();
-//        return path.startsWith(excludePath);
-//    }
-
     @Override
-    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest req, @NonNull HttpServletResponse res, @NonNull FilterChain filterChain)
+            throws ServletException, IOException {
 
-        String tokenValue = jwtUtil.getTokenFromRequest(req);
-        log.info(tokenValue);
+        String accessToken = jwtUtil.getAccessTokenFromRequest(req);
+        log.info(accessToken);
 
-        if (StringUtils.hasText(tokenValue)) {
+        if (StringUtils.hasText(accessToken)) {
             // JWT 토큰 substring
-            tokenValue = jwtUtil.substringToken(tokenValue);
+            String tokenValue = jwtUtil.substringToken(accessToken);
             log.info(tokenValue);
             // 토큰 검증
             if (!jwtUtil.validateToken(tokenValue)) {
                 log.error("Token Error");
-                throw new IllegalArgumentException("Token Error");
             }
             // 토큰에서 사용자 정보 가져오기
             Claims info = jwtUtil.getUserInfoFromToken(tokenValue);
@@ -58,9 +47,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {  //무조건 
             try {
                 setAuthentication(info.get("email", String.class));
             } catch (Exception e) {
-                log.info("에러발생");
                 log.error(e.getMessage());
-                return;
             }
         }
 

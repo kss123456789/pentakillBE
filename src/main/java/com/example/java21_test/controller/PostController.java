@@ -59,9 +59,4 @@ public class PostController {
     public StatusCodeResponseDto<List<String>> uploadImage(List<MultipartFile> files) throws IOException {
         return s3Service.upload(files);
     }
-
-//    @GetMapping("/deleteTemp")
-//    public StatusCodeResponseDto<?> deleteTemp() {
-//        return s3Service.deleteOldTempFiles();
-//    }
 }
