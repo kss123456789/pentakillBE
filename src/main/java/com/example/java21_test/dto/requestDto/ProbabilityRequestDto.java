@@ -23,17 +23,11 @@ public class ProbabilityRequestDto {
 
     @Getter
     public static class Participant {
-        private int participantId;
         private String esportsPlayerId;
-        private String summonerName;
-        private String championId;
         private String role;
 
-        public Participant(int participantId, String esportsPlayerId, String summonerName, String championId, String role) {
-            this.participantId = participantId;
+        public Participant(String esportsPlayerId, String role) {
             this.esportsPlayerId = esportsPlayerId;
-            this.summonerName = summonerName;
-            this.championId = championId;
             this.role = role;
         }
     }

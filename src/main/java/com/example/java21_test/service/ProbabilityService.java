@@ -1,77 +1,146 @@
 package com.example.java21_test.service;
 
-import com.example.java21_test.dto.mapper.ScheduleMapper;
 import com.example.java21_test.dto.requestDto.ProbabilityRequestDto;
+import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.entity.Schedule;
+import com.example.java21_test.respository.ScheduleRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j(topic = "api 조회 및 승률예측값 저장")
 @Service
 @RequiredArgsConstructor
 public class ProbabilityService {
-    private ApiService apiService;
+    private final ApiService apiService;
+    private final ScheduleRepository scheduleRepository;
 
-    public void saveProbability(Schedule schedule) {
+    @Value("${participant.roles}")
+    String[] PARTICIPANT_ROLE;
+
+    public StatusCodeResponseDto<ProbabilityRequestDto> saveProbability(String matchId) {
+        Schedule schedule = scheduleRepository.findByMatchId(matchId).orElse(null);
         // requestDto 만들기
-        ProbabilityRequestDto.Participant participant = new ProbabilityRequestDto.Participant(5, "fsdf", "sdfs", "sdfsd", "sfs");
-        List<ProbabilityRequestDto.Participant> participantList = new ArrayList<>();
-        ProbabilityRequestDto.TeamProbability teamProbability = new ProbabilityRequestDto.TeamProbability("fds", participantList);
+//        String matchId = schedule.getMatchId();
+        String json = apiService.getTeamDataJsonFromApi(matchId);
 
-        List<ProbabilityRequestDto.TeamProbability> teamProbabilityList = new ArrayList<>();
-        ProbabilityRequestDto probabilityRequestDto = new ProbabilityRequestDto("", teamProbabilityList);
+        ProbabilityRequestDto probabilityRequestDto = createRequestDtoFromJson(json, matchId);
 
-        String json = apiService.getProbabilityJsonFromDS(probabilityRequestDto);
+//        getProbabilityFromJson(probabilityRequestDto);
 
+        return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "test", probabilityRequestDto);
     }
 
-//    @Transactional
-//    public void saveProbabilityFromJson(String json) {
-//        log.info("json 문자열에서 Probability 값 가져오기");
-//        try {
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            JsonNode events = objectMapper.readTree(json).get("data").get("schedule").get("events");
-//            // newer 확인
-//            String newer = objectMapper.readTree(json).get("data").get("schedule").get("pages").get("newer").asText();
-//            if (!newer.equals("null")) {
-//                log.info("추가 페이지 확인!");
-//                // 재귀로 추가 페이지가 없을 때 까지 불러온다.
-//                saveScheduleFromJson(apiService.getScheduleJsonFromApi(leagueId, newer), leagueId);
-//            }
-//            for (JsonNode rootNode : events) {
-//                log.info(rootNode.asText());
-//                // JSON 데이터에서 필요한 정보 추출, Schedule 객체 생성 저장
-//                Schedule schedule = ScheduleMapper.toDto(rootNode);
-//                String matchId = schedule.getMatchId();
-//                Schedule checkSchedule = scheduleRepository.findByMatchId(matchId).orElse(null);
-//                if (checkSchedule == null) { // 중복 값이 없는 경우 저장
-//                    scheduleRepository.save(schedule);
-//                } else { // 중복인 경우 업데이트
-//                    checkSchedule.update(schedule);
-//                }
-//                // betting page에 들어가는 리그인지 확인
-//                if (majorLeagueList.contains(leagueId)) {
-//                    // 승률예측 값 받아오기
-//                    // 값 있는지, tbd는 아닌지 확인
-//                    //
-//
-//                    // 날짜가 오늘인 경우 스케줄 일정 등록...
-//                    apiUpdateService.checkTodaySchedule(schedule, leagueId);
-//                }
-//
-//                // 날짜가 오늘인 경우 스케줄 일정 등록...
-//                apiUpdateService.checkTodaySchedule(schedule, leagueId);
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            // 예외 처리
-//        }
-//    }
+    private void getProbabilityFromJson(ProbabilityRequestDto probabilityRequestDto) {
+        String json = apiService.getProbabilityJsonFromDS(probabilityRequestDto);
+        log.info(json);
+    }
+
+    public ProbabilityRequestDto createRequestDtoFromJson(String json, String matchId) {
+        log.info("json 문자열에서 Probability 값 가져오기");
+        List<ProbabilityRequestDto.Participant> participantList = new ArrayList<>();
+        List<ProbabilityRequestDto.TeamProbability> teamProbabilityList = new ArrayList<>();
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode teamsNode = objectMapper.readTree(json).get("data").get("event").get("match").get("teams");
+            for (JsonNode teamNode: teamsNode) {
+                String teamId = teamNode.get("id").asText();
+                String teamName = teamNode.get("name").asText();
+                log.info(teamName);
+                List<Schedule> scheduleList = scheduleRepository.findTop5ByStateAndTeamName("completed", teamName);
+                List<JsonNode> participantsNodeList = new ArrayList<>();
+                for (Schedule schedule : scheduleList) {
+                    String matchIdBefore = schedule.getMatchId();
+                    String jsonForGameId = apiService.getTeamDataJsonFromApi(matchIdBefore);
+                    JsonNode participants = getParticipantDataFromJson(jsonForGameId, teamId);
+                    participantsNodeList.add(participants);
+                }
+                Map<String, String> roleModeMap = findModeFromParticipantId(participantsNodeList);
+                for (String role : PARTICIPANT_ROLE) {
+                    ProbabilityRequestDto.Participant participant = new ProbabilityRequestDto.Participant(roleModeMap.get(role), role);
+                    participantList.add(participant);
+                }
+                ProbabilityRequestDto.TeamProbability teamProbability = new ProbabilityRequestDto.TeamProbability(teamId, participantList);
+                teamProbabilityList.add(teamProbability);
+            }
+            ProbabilityRequestDto probabilityRequestDto = new ProbabilityRequestDto(matchId, teamProbabilityList);
+            return probabilityRequestDto;
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 예외 처리
+        }
+        return null;
+    }
+
+    public JsonNode getParticipantDataFromJson(String json, String teamId) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode gamesNode = objectMapper.readTree(json).get("data").get("event").get("match").get("games");
+            // 첫 경기의 픽만 확인
+            String gameId = gamesNode.get(0).get("id").asText();
+            log.info(gameId);
+            String jsonFromGame = apiService.getGameDataJsonFromApi(gameId);
+            JsonNode blueTeamMetadata = objectMapper.readTree(jsonFromGame).get("gameMetadata").get("blueTeamMetadata");
+            JsonNode redTeamMetadata = objectMapper.readTree(jsonFromGame).get("gameMetadata").get("redTeamMetadata");
+            JsonNode participants = null;
+            if (blueTeamMetadata.get("esportsTeamId").equals(teamId)) {
+                participants = blueTeamMetadata.get("participantMetadata");
+            } else {
+                participants = redTeamMetadata.get("participantMetadata");
+            }
+            return participants;
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 예외 처리
+        }
+        return null;
+    }
+
+    public Map<String, String> findModeFromParticipantId(List<JsonNode> participantsList) {
+        try{
+            // 역할별 빈도수 맵
+            Map<String, Map<String, Integer>> roleCountMap = new HashMap<>();
+            for (JsonNode participants : participantsList) {
+                for (JsonNode participant : participants) {
+                    String role = participant.get("role").asText();
+                    String participantId = participant.get("esportsPlayerId").asText();
+                    roleCountMap.putIfAbsent(role, new HashMap<>());
+                    Map<String, Integer> countMap = roleCountMap.get(role);
+                    countMap.put(participantId, countMap.getOrDefault(participantId, 0) + 1);
+                }
+            }
+            // 역할별 최빈값
+            Map<String, String> roleModeMap = new HashMap<>();
+            // 역할별
+            for (Map.Entry<String, Map<String, Integer>> entry : roleCountMap.entrySet()) {
+                String role = entry.getKey();
+                Map<String, Integer> countMap = entry.getValue();
+                int maxCount = 0;
+                String mode = "";
+                // 각 Id별로 count 확인
+                for (Map.Entry<String, Integer> countEntry : countMap.entrySet()) {
+                    if (countEntry.getValue() > maxCount) {
+                        maxCount = countEntry.getValue();
+                        mode = countEntry.getKey();
+                    }
+                }
+                roleModeMap.put(role, mode);
+            }
+            return roleModeMap;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 예외 처리
+        }
+        return null;
+    }
 }

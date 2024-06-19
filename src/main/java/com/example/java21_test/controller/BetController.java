@@ -1,9 +1,11 @@
 package com.example.java21_test.controller;
 
+import com.example.java21_test.dto.requestDto.ProbabilityRequestDto;
 import com.example.java21_test.dto.responseDto.RecentWeeklySchedulesResponseDto;
 import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.impl.UserDetailsImpl;
 import com.example.java21_test.service.BetService;
+import com.example.java21_test.service.ProbabilityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class BetController {
 
     private final BetService betService;
+    private final ProbabilityService probabilityService;
 
     // 최근 토너먼트 저장 // 관리자
     @GetMapping("/saveTournaments")
@@ -34,6 +37,8 @@ public class BetController {
     }
 
     // ds 팀에 보낼 요청겸 승률 예측값 받아오기
-//    @GetMapping("/updateRate")
-//    public StatusCodeResponseDto<Void> update
+    @GetMapping("/updateRate")
+    public StatusCodeResponseDto<ProbabilityRequestDto> updateWinRate(String matchId) {
+        return probabilityService.saveProbability(matchId);
+    }
 }

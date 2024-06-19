@@ -65,4 +65,32 @@ public class ApiService {
 
         return result.getBody();
     }
+
+    public String getTeamDataJsonFromApi(String teamCode) {
+        URI targetUrl = UriComponentsBuilder
+                .fromUriString("https://esports-api.lolesports.com")
+                .path("/persisted/gw/getEventDetails")
+                .queryParam("hl", "ko-KR")
+                .queryParam("id", teamCode)
+                .build()
+                .encode(StandardCharsets.UTF_8) //인코딩
+                .toUri();
+
+        ResponseEntity<String> result = restTemplateUtil.getDataFromAPI(targetUrl);
+
+        return result.getBody();
+    }
+
+    public String getGameDataJsonFromApi(String gameId) {
+        URI targetUrl = UriComponentsBuilder
+                .fromUriString("https://feed.lolesports.com")
+                .path("/livestats/v1/window/" + gameId)
+                .build()
+                .encode(StandardCharsets.UTF_8) //인코딩
+                .toUri();
+
+        ResponseEntity<String> result = restTemplateUtil.getDataFromAPI(targetUrl);
+
+        return result.getBody();
+    }
 }

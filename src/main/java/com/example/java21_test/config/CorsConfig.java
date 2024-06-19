@@ -19,6 +19,7 @@ public class CorsConfig {
 
         // Expose only specific headers
         config.addExposedHeader("Authorization");
+        config.addExposedHeader("RefreshToken");
 
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);

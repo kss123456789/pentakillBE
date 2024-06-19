@@ -54,8 +54,13 @@ public class PostService {
 
     public StatusCodeResponseDto<PostResponseDto> getPost(Long postId, UserDetailsImpl userDetails) {
         User user = checkUser(userDetails);
-        Post post = postRepository.findById(postId).orElseThrow(() ->
-                new IllegalArgumentException("기록을 찾을 수 없습니다."));
+        Post post = postRepository.findById(postId).orElse(null);
+
+        // 현재 throw로 error 보낼시 authorization handler에서 걸려서 401이 나오게 되었다.
+        if (post == null) {
+            log.error("존재하지 않는 게시글");
+            return new StatusCodeResponseDto<>(HttpStatus.NOT_FOUND.value(), "게시글 조회 완료x");
+        }
 
         PostResponseDto postResponseDto = PostMapper.toDto(post, user);
 
