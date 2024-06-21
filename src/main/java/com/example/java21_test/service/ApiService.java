@@ -37,7 +37,6 @@ public class ApiService {
 
     public String getScheduleJsonFromApi(String leagueId, String newer) {
         log.info("특정리그 schedule 가져오기 from api");
-
         URI targetUrl = UriComponentsBuilder
                 .fromUriString("https://esports-api.lolesports.com")
                 .path("/persisted/gw/getSchedule")
@@ -53,10 +52,26 @@ public class ApiService {
         return result.getBody();
     }
 
+    public String getEventDetailJsonFromApi(String matchId) {
+        log.info("특정 schedule(eventDetail) from api");
+        URI targetUrl = UriComponentsBuilder
+                .fromUriString("https://esports-api.lolesports.com")
+                .path("/persisted/gw/getEventDetails")
+                .queryParam("hl", "ko-KR")
+                .queryParam("id", matchId)
+                .build()
+                .encode(StandardCharsets.UTF_8) //인코딩
+                .toUri();
+
+        ResponseEntity<String> result = restTemplateUtil.getDataFromAPI(targetUrl);
+
+        return result.getBody();
+    }
+
     public String getProbabilityJsonFromDS(ProbabilityRequestDto probabilityRequestDto) {
         URI targetUrl = UriComponentsBuilder
-                .fromUriString("localhost:5000")
-                .path("/probability")
+                .fromUriString("https://fdcej-2.du.r.appspot.com") // localhost에서 사용될 가능성 있음
+                .path("/predict")
                 .build()
                 .encode(StandardCharsets.UTF_8) //인코딩
                 .toUri();
@@ -66,12 +81,12 @@ public class ApiService {
         return result.getBody();
     }
 
-    public String getTeamDataJsonFromApi(String teamCode) {
+    public String getTeamDataJsonFromApi(String matchId) {
         URI targetUrl = UriComponentsBuilder
                 .fromUriString("https://esports-api.lolesports.com")
                 .path("/persisted/gw/getEventDetails")
                 .queryParam("hl", "ko-KR")
-                .queryParam("id", teamCode)
+                .queryParam("id", matchId)
                 .build()
                 .encode(StandardCharsets.UTF_8) //인코딩
                 .toUri();

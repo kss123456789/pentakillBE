@@ -14,12 +14,12 @@ public class PointUtil {
         Point point = pointLog.getPoint();
         int winPoint = (int) (pointLog.getAmount()*odds);
         point.update(winPoint);
-        pointLog.update(winPoint, " win");
+        pointLog.update(winPoint, "win");
     }
 
     @Transactional
     public void lossPoint(PointLog pointLog) {
-        pointLog.update(pointLog.getAmount(), " loss");
+        pointLog.update(pointLog.getAmount(), "loss");
 
     }
 

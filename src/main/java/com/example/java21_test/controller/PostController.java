@@ -1,7 +1,7 @@
 package com.example.java21_test.controller;
 
-import com.example.java21_test.dto.responseDto.PageResponseDto;
 import com.example.java21_test.dto.requestDto.PostRequestDto;
+import com.example.java21_test.dto.responseDto.PageResponseDto;
 import com.example.java21_test.dto.responseDto.PostResponseDto;
 import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.impl.UserDetailsImpl;
@@ -9,6 +9,7 @@ import com.example.java21_test.service.PostService;
 import com.example.java21_test.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,9 +38,12 @@ public class PostController {
     }
 
     @GetMapping("/{postId}")
-    public StatusCodeResponseDto<PostResponseDto> getPost(@PathVariable Long postId,
-                                                          @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return postService.getPost(postId, userDetails);
+    public ResponseEntity<StatusCodeResponseDto<PostResponseDto>> getPost(@PathVariable Long postId,
+                                                                          @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        StatusCodeResponseDto<PostResponseDto> statusCodeResponseDto = postService.getPost(postId, userDetails);
+        return ResponseEntity.ok()
+                .body(statusCodeResponseDto);
+//        return postService.getPost(postId, userDetails);
     }
 
     @PutMapping("/{postId}")

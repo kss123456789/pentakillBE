@@ -16,6 +16,7 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -99,6 +101,7 @@ public class UserService {
         if (isValidate) {
             redisUtil.deleteRefreshToken(refreshToken); // refresh 토큰 없다 오류 가능
         } else {
+            log.info("refresh validate 불가");
             return new StatusCodeResponseDto<>(HttpStatus.UNAUTHORIZED.value(), "Refresh token is not validated");
         }
         // refresh token으로부터 email 가져오기
@@ -119,9 +122,11 @@ public class UserService {
     public void addTokensToHeader(User user, Point point, HttpServletResponse httpServletResponse) {
         // access 토큰 생성, header에 넣기
         String accessToken = jwtUtil.createAccessToken(user, point);
+        log.info("accessToken : " + accessToken);
         jwtUtil.addAccessTokenToHeader(accessToken, httpServletResponse);
         // refresh 토큰 생성, header에 넣기, redis에 저장
         String refreshToken = jwtUtil.createRefreshToken(user);
+        log.info("refreshToken : " + refreshToken);
         jwtUtil.addRefreshTokenToHeader(refreshToken, httpServletResponse);
         redisUtil.setRefreshToken(refreshToken);
     }

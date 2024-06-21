@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface TournamentRepository extends JpaRepository<Tournament, String> {
     //오늘기준 tournament가 끝나지 않은 값들 중 가장 최근 값1개
     Optional<Tournament> findTop1ByEndDateAfterOrderByStartDateAsc(String localDateNow);
+    Optional<Tournament> findTopByOrderByStartDateDesc();
 }

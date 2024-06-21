@@ -9,7 +9,7 @@ import java.util.List;
 public class BettingSchedulerMapper{
 
     public static BettingScheduleResponseDto toDto(Schedule schedule, boolean betting, int amount, String teamCode, String status,
-                                                   float ratio1, float ratio2, float probability1, float probability2)  {
+                                                   float ratio1, float ratio2, double probability1, double probability2)  {
         LeagueScheduleResponseDto.League league = new LeagueScheduleResponseDto.League(schedule.getLeagueName(), schedule.getLeagueSlug());
 
         BettingScheduleResponseDto.TeamRatio team1 = new BettingScheduleResponseDto.TeamRatio(schedule.getTeam1Name(), schedule.getTeam1Code(), schedule.getTeam1Image(),

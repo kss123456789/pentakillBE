@@ -13,12 +13,18 @@ public class Probability {
     private Long id;
 
     @Column(nullable = false)
-    private float probability1;
+    private double probability1;
 
     @Column(nullable = false)
-    private float probability2;
+    private double probability2;
 
     @OneToOne
     @JoinColumn(name = "schedule_matchId", nullable = false)
     private Schedule schedule;
+
+    public Probability(double probability1, double probability2, Schedule schedule) {
+        this.probability1 = probability1;
+        this.probability2 = probability2;
+        this.schedule = schedule;
+    }
 }

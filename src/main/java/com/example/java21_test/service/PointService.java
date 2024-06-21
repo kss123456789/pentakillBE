@@ -36,6 +36,7 @@ public class PointService {
 
     // point betting 경기가 시작하지 않은걸 확인하고 betting시작
     // 현재 테스트 용도로 쓰기위해 남겨두고 주석처리 해둘예정임
+    // team code가 중복이 있을 수 있음... 중복없을 teamName을 쓰는것을 고려
     @Transactional
     public StatusCodeResponseDto<PointLogResponseDto> pointBetting(PointBettngRequestDto pointBettngRequestDto, User user, HttpServletResponse jwtResponse) {
         int amount = pointBettngRequestDto.getPoint();

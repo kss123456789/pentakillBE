@@ -51,9 +51,9 @@ public class BettingScheduleResponseDto {
     @Getter
     public static class TeamRatio extends LeagueScheduleResponseDto.Team {
         private float ratio;
-        private float probability;
+        private double probability;
         public TeamRatio(String name, String code, String image, LeagueScheduleResponseDto.Result result, LeagueScheduleResponseDto.Record record,
-                         float ratio, float probability) {
+                         float ratio, double probability) {
             super(name, code, image, result, record);
             this.ratio = ratio;
             this.probability = probability;

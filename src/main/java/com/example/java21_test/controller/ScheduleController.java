@@ -1,14 +1,17 @@
 package com.example.java21_test.controller;
 
-import com.example.java21_test.dto.responseDto.LeagueScheduleResponseDto;
-import com.example.java21_test.dto.responseDto.PageResponseDto;
+import com.example.java21_test.dto.responseDto.PageResponseScheduleByDateDto;
 import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
+import com.example.java21_test.entity.Schedule;
 import com.example.java21_test.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/schedules")
@@ -20,8 +23,9 @@ public class ScheduleController {
     // requestDto를 만족하지않았을때 에러 뜨게 하기!!
     //page, size 값이 안 들어왔을 때 NullpointerException이 나온다아아 이것도 에러처리해보시지
     @GetMapping("/leagues")
-    public PageResponseDto<LeagueScheduleResponseDto> getLeagueSchedules(Integer size, Integer page) {
-        return scheduleService.getLeagueSchedules(size, page);
+    public PageResponseScheduleByDateDto<LocalDate, List<Schedule>> getLeagueSchedules(Integer size, Integer page,
+                                                                                       Integer year, Integer month) {
+        return scheduleService.getLeagueSchedules(size, page, year, month);
     }
 
     // 전체 일정 업데이트(오늘날짜의 기록이 있을시 스케줄 등록) // 관리자

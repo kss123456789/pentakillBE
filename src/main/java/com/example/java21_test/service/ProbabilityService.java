@@ -1,7 +1,6 @@
 package com.example.java21_test.service;
 
 import com.example.java21_test.dto.requestDto.ProbabilityRequestDto;
-import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.entity.Schedule;
 import com.example.java21_test.respository.ScheduleRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -9,7 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,27 +21,28 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ProbabilityService {
     private final ApiService apiService;
+    private final BetService betService;
     private final ScheduleRepository scheduleRepository;
+    private final ProbabilityTransactionalService probabilityTransactionalService;
 
     @Value("${participant.roles}")
     String[] PARTICIPANT_ROLE;
 
-    public StatusCodeResponseDto<ProbabilityRequestDto> saveProbability(String matchId) {
-        Schedule schedule = scheduleRepository.findByMatchId(matchId).orElse(null);
-        // requestDto 만들기
-//        String matchId = schedule.getMatchId();
-        String json = apiService.getTeamDataJsonFromApi(matchId);
-
-        ProbabilityRequestDto probabilityRequestDto = createRequestDtoFromJson(json, matchId);
-
-//        getProbabilityFromJson(probabilityRequestDto);
-
-        return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "test", probabilityRequestDto);
-    }
-
-    private void getProbabilityFromJson(ProbabilityRequestDto probabilityRequestDto) {
-        String json = apiService.getProbabilityJsonFromDS(probabilityRequestDto);
-        log.info(json);
+    @Scheduled(cron = "0 0 0 * * ?")
+    public void saveProbability() {
+        List<Schedule> scheduleList = betService.getRecentTournamentSchedule();
+        for (Schedule schedule : scheduleList) {
+            String matchId = schedule.getMatchId();
+            // eventDtail api 요청
+            String jsonFromApi = apiService.getTeamDataJsonFromApi(matchId);
+            // json 값을 통해 팀관련정보 준비(ds에 줄 정보)
+            ProbabilityRequestDto probabilityRequestDto = createRequestDtoFromJson(jsonFromApi, matchId);
+            // ds에 정보 전달 후 승률 받음
+            String jsonFromDS = apiService.getProbabilityJsonFromDS(probabilityRequestDto);
+            log.info(jsonFromDS);
+            // 승률정보로 probability 저장
+            probabilityTransactionalService.saveProbabilityFromJson(jsonFromDS, schedule);
+        }
     }
 
     public ProbabilityRequestDto createRequestDtoFromJson(String json, String matchId) {
@@ -72,8 +72,7 @@ public class ProbabilityService {
                 ProbabilityRequestDto.TeamProbability teamProbability = new ProbabilityRequestDto.TeamProbability(teamId, participantList);
                 teamProbabilityList.add(teamProbability);
             }
-            ProbabilityRequestDto probabilityRequestDto = new ProbabilityRequestDto(matchId, teamProbabilityList);
-            return probabilityRequestDto;
+            return new ProbabilityRequestDto(matchId, teamProbabilityList);
         } catch (Exception e) {
             e.printStackTrace();
             // 예외 처리
@@ -87,12 +86,11 @@ public class ProbabilityService {
             JsonNode gamesNode = objectMapper.readTree(json).get("data").get("event").get("match").get("games");
             // 첫 경기의 픽만 확인
             String gameId = gamesNode.get(0).get("id").asText();
-            log.info(gameId);
             String jsonFromGame = apiService.getGameDataJsonFromApi(gameId);
             JsonNode blueTeamMetadata = objectMapper.readTree(jsonFromGame).get("gameMetadata").get("blueTeamMetadata");
             JsonNode redTeamMetadata = objectMapper.readTree(jsonFromGame).get("gameMetadata").get("redTeamMetadata");
-            JsonNode participants = null;
-            if (blueTeamMetadata.get("esportsTeamId").equals(teamId)) {
+            JsonNode participants;
+            if (blueTeamMetadata.get("esportsTeamId").asText().equals(teamId)) {
                 participants = blueTeamMetadata.get("participantMetadata");
             } else {
                 participants = redTeamMetadata.get("participantMetadata");

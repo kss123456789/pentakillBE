@@ -1,26 +1,29 @@
 package com.example.java21_test.service;
 
-import com.example.java21_test.dto.mapper.LeagueScheduleMapper;
 import com.example.java21_test.dto.mapper.ScheduleMapper;
-import com.example.java21_test.dto.responseDto.LeagueScheduleResponseDto;
-import com.example.java21_test.dto.responseDto.PageResponseDto;
+import com.example.java21_test.dto.responseDto.PageResponseScheduleByDateDto;
+import com.example.java21_test.entity.Probability;
 import com.example.java21_test.entity.Schedule;
+import com.example.java21_test.respository.ProbabilityRepository;
 import com.example.java21_test.respository.ScheduleRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j(topic = "openApi schedule 저장, db조회")
 @Service
@@ -28,7 +31,8 @@ import java.util.List;
 public class ScheduleService {
     private final ScheduleRepository scheduleRepository;
     private final ApiService apiService;
-    private final ApiUpdateService apiUpdateService;
+    private final ProbabilityRepository probabilityRepository;
+    private final ScheduleTransactionalService scheduleTransactionalService;
 
 //    api 읽기, 값 저장, 값 가져오기, leagueId 확인
     @Value("${league.ids}")
@@ -37,71 +41,125 @@ public class ScheduleService {
     @Value("${majorLeague.ids}")
     private List<String> majorLeagueList;
 
-    // 하루의 시작... 12시에 업데이트, 그날의 경기가 있다면 미리 스케줄 등록
+    // 하루의 시작... 12시에 업데이트, 그날의 경기가 있다면 미리 스케줄 등록 // 업데이트 모아서 처리
     @Scheduled(cron = "0 0 0 * * ?")
-    @Transactional
+//    @PostConstruct
     public void saveLeagueSchedules() {
         log.info("리그스케쥴 업데이트");
         for (String leagueId : leagueIdList) {
             String json = apiService.getScheduleJsonFromApi(leagueId, null);
-            saveScheduleFromJson(json, leagueId);
+            List<JsonNode> jsonNodeList = new ArrayList<>();
+            getScheduleNodesFromJson(json, leagueId, jsonNodeList);
+            saveScheduleFromJson(jsonNodeList);
         }
     }
 
-    public PageResponseDto<LeagueScheduleResponseDto> getLeagueSchedules(Integer size, Integer page) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startTime"));
-        Page<Schedule> scheduleList = scheduleRepository.findAllByOrderByStartTimeDesc(pageable);
-        if (scheduleList.isEmpty()) {
-            // 비어 있다면 적절한 응답을 반환
-            return new PageResponseDto<>(HttpStatus.NOT_FOUND.value(), "No schedules found for the league");
+    public PageResponseScheduleByDateDto<LocalDate, List<Schedule>> getLeagueSchedules(Integer size, Integer page, Integer year, Integer month) {
+        // 에러
+        if (page == null || size == null) {
+            return new PageResponseScheduleByDateDto<>(HttpStatus.BAD_REQUEST.value(), "No schedules found for the league");
         }
-        Page<LeagueScheduleResponseDto> leagueScheduleResponseDto = scheduleList.map(LeagueScheduleMapper::toDto);
+        // 목표 년월
+        String targetYearMonth = getTargetYearMonth(year, month);
+        year = Integer.valueOf(targetYearMonth.split("-")[0]);
+        month = Integer.valueOf(targetYearMonth.split("-")[1]);
+        // 한달전체 일정
+        List<Schedule> scheduleList = scheduleRepository.findByStartTimeWithYearAndMonth(targetYearMonth);
+        // 날짜별로 그룹
+        Map<LocalDate, List<Schedule>> schedulesByDate = getSchedulesGroupedByDate(scheduleList);
+        // pagination
 
-        return new PageResponseDto<>(HttpStatus.OK.value(), "SUCCESS", leagueScheduleResponseDto);
+        long totalElements = schedulesByDate.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        Map<LocalDate, List<Schedule>> pagedSchedules = getPage(schedulesByDate, page, size);
+        return new PageResponseScheduleByDateDto<>(HttpStatus.OK.value(), targetYearMonth + " schedule-pagination 정보입니다.",
+                pagedSchedules, year, month, page, totalPages, totalElements, size);
     }
 
-    // 문제... try catch로 중복값 에러처리를 하고있는데 이걸 확인하고 넣도록 해서 진행중인데.. 만일 json 값중 위에 있는 값이 중복값이 있으면 아래에 있는 중복 아닌값도 추가가 안되게 된다.
-    // 해결책1 근본일지도 모르나 가장 성능은 구릴것 같은것 같은 방법 저장하기 전에 중복확인을 하고
-    @Transactional
-    public void saveScheduleFromJson(String json, String leagueId) {
-        log.info("json 문자열을 schedule객체로 변환");
+    public String getTargetYearMonth(Integer year, Integer month) {
+        String targetYearMonth;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+        // 최초접속
+        if (year == null && month == null) {
+            targetYearMonth = LocalDate.now().format(formatter);
+        } else if (year == null || month == null ) {
+            throw new NullPointerException("need year and month or null all");
+        } else { // 특정 년월 입력시
+            targetYearMonth = LocalDate.of(year, month, 1).format(formatter);
+        }
+        return targetYearMonth;
+    }
+    public Map<LocalDate, List<Schedule>> getSchedulesGroupedByDate(List<Schedule> scheduleList) {
+        return scheduleList.stream()
+                .collect(Collectors.groupingBy(
+                        (schedule) -> {
+                            String instantString = schedule.getStartTime();
+                            return instantStringToDate(instantString);
+                        },
+                        LinkedHashMap::new, // Use LinkedHashMap as the map supplier
+                        Collectors.toList()
+                ));
+    }
+
+    public <K, V> Map<K, V> getPage(Map<K, V> map, int pageNumber, int pageSize) {
+        int start = pageNumber * pageSize;
+        int end = start + pageSize;
+        int currentIndex = 0;
+
+        Map<K, V> page = new LinkedHashMap<>();
+        for (Map.Entry<K, V> entry : map.entrySet()) {
+            if (currentIndex >= start && currentIndex < end) {
+                page.put(entry.getKey(), entry.getValue());
+            }
+            currentIndex++;
+            if (currentIndex >= end) {
+                break;
+            }
+        }
+
+        return page;
+    }
+
+    public LocalDate instantStringToDate(String instantString) {
+        Instant instant = Instant.parse(instantString);
+        return instant.atZone(ZoneId.of("Asia/Seoul")).toLocalDate();
+    }
+
+    public void getScheduleNodesFromJson(String json, String leagueId, List<JsonNode> jsonNodeList) {
+        log.info("전체 jsonNode에서 scheduleNode 가져오기");
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode events = objectMapper.readTree(json).get("data").get("schedule").get("events");
+            JsonNode scheduleNodes = objectMapper.readTree(json).get("data").get("schedule").get("events");
             // newer 확인
             String newer = objectMapper.readTree(json).get("data").get("schedule").get("pages").get("newer").asText();
+            jsonNodeList.add(scheduleNodes);
             if (!newer.equals("null")) {
                 log.info("추가 페이지 확인!");
                 // 재귀로 추가 페이지가 없을 때 까지 불러온다.
-                saveScheduleFromJson(apiService.getScheduleJsonFromApi(leagueId, newer), leagueId);
-            }
-            for (JsonNode rootNode : events) {
-                log.info(rootNode.asText());
-                // JSON 데이터에서 필요한 정보 추출, Schedule 객체 생성 저장
-                Schedule schedule = ScheduleMapper.toDto(rootNode);
-                String matchId = schedule.getMatchId();
-                Schedule checkSchedule = scheduleRepository.findByMatchId(matchId).orElse(null);
-                if (checkSchedule == null) { // 중복 값이 없는 경우 저장
-                    scheduleRepository.save(schedule);
-                } else { // 중복인 경우 업데이트
-                    checkSchedule.update(schedule);
-                }
-                // betting page에 들어가는 리그인지 확인
-                if (majorLeagueList.contains(leagueId)) {
-                    // 승률예측 값 받아오기
-                    // 값 있는지, tbd는 아닌지 확인
-                    //
-
-                    // 날짜가 오늘인 경우 스케줄 일정 등록...
-                    apiUpdateService.checkTodaySchedule(schedule, leagueId);
-                }
-
-                // 날짜가 오늘인 경우 스케줄 일정 등록...
-                apiUpdateService.checkTodaySchedule(schedule, leagueId);
+                getScheduleNodesFromJson(apiService.getScheduleJsonFromApi(leagueId, newer), leagueId, jsonNodeList);
             }
         } catch (Exception e) {
             e.printStackTrace();
             // 예외 처리
         }
+    }
+
+    public void saveScheduleFromJson(List<JsonNode> jsonNodeList) {
+        for (JsonNode jsonNode : jsonNodeList) {
+            for (JsonNode scheduleNode : jsonNode) {
+                // JSON 데이터에서 필요한 정보 추출, Schedule 객체 생성 저장
+                Schedule schedule = ScheduleMapper.toDto(scheduleNode);
+                scheduleTransactionalService.saveSchedule(schedule);
+            }
+        }
+    }
+
+    public boolean needProbability(Schedule schedule) {
+        // 값 있는지, tbd는 아닌지 확인
+        if (schedule.getTeam1Code().equals("TBD") || schedule.getTeam2Code().equals("TBD")) {
+            return false;
+        }
+        Probability probability = probabilityRepository.findBySchedule(schedule).orElse(null);
+        return probability == null;
     }
 }

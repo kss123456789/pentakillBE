@@ -102,4 +102,13 @@ public class Schedule {
         this.matchStrategyType = schedule.getMatchStrategyType();
         this.matchStrategyCount = schedule.getMatchStrategyCount();
     }
+
+
+    public void updateLive(String state, int team1wins, int team2wins, String team1Outcome, String team2Outcome) {
+        this.state = state;
+        this.team1GameWins = team1wins;
+        this.team2GameWins = team2wins;
+        this.team1Outcome = team1Outcome;
+        this.team2Outcome = team2Outcome;
+    }
 }

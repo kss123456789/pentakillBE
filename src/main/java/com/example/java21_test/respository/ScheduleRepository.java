@@ -11,7 +11,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ScheduleRepository extends JpaRepository<Schedule, String> {
-    Optional<Schedule> findTop1ByLeagueSlugAndStartTimeAfterOrderByStartTimeAsc(String slug, String startDate);
+    // SELECT * FROM your_table
+    //WHERE DATE_FORMAT(CONVERT_TZ(STR_TO_DATE(your_column, '%Y-%m-%dT%H:%i:%sZ'), '+00:00', @@session.time_zone), '%Y-%m') = DATE_FORMAT(CONVERT_TZ(NOW(), '+00:00', @@session.time_zone), '%Y-%m');
+    @Query(value = "SELECT * FROM schedule t " +
+            "WHERE DATE_FORMAT(CONVERT_TZ(STR_TO_DATE(t.start_time, '%Y-%m-%dT%H:%i:%sZ'), '+00:00', @@session.time_zone), '%Y-%m') = :targetYearMonth " +
+            "ORDER BY start_time ASC", nativeQuery = true)
+    List<Schedule> findByStartTimeWithYearAndMonth(@Param("targetYearMonth") String targetYearMonth);
     List<Schedule> findAllByLeagueSlugAndStartTimeBetweenOrderByStartTimeAsc(String slug, String startDate, String endDate);
     Page<Schedule> findAllByOrderByStartTimeDesc(Pageable pageable);
     Optional<Schedule> findByMatchId(String matchId);
@@ -19,6 +24,14 @@ public interface ScheduleRepository extends JpaRepository<Schedule, String> {
 //    List<Schedule> findTop5ByTeam1CodeOrTeam2CodeOrderByStartTimeDesc(String teamCode);
 
 //    @Query("SELECT t FROM Schedule t WHERE t.state = :state AND (t.team1Name = :teamName OR t.team2Name = :teamName) ORDER BY t.startTime DESC")
-    @Query(value = "SELECT * FROM Schedule t WHERE t.state = :state AND (t.team1Name = :teamName OR t.team2Name = :teamName) ORDER BY start_time DESC LIMIT 5", nativeQuery = true)
+    @Query(value = "SELECT * FROM schedule t " +
+            "WHERE t.state = :state AND (t.team1Name = :teamName OR t.team2Name = :teamName) " +
+            "ORDER BY start_time DESC LIMIT 5", nativeQuery = true)
     List<Schedule> findTop5ByStateAndTeamName(@Param("state") String state, @Param("teamName") String teamName);
+
+    @Query(value = "SELECT * FROM schedule t " +
+            "WHERE t.league_slug = :slug " +
+            "AND DATE_FORMAT(CONVERT_TZ(STR_TO_DATE(t.start_time, '%Y-%m-%dT%H:%i:%sZ'), '+00:00', @@session.time_zone), '%Y-%m-%d') = :localDateNow " +
+            "ORDER BY start_time DESC LIMIT 5", nativeQuery = true)
+    List<Schedule> findAllByLeagueSlugAndStartDate(@Param("slug") String slug, @Param("localDateNow") String localDateNow);
 }

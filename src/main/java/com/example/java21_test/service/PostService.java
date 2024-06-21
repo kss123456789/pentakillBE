@@ -63,6 +63,7 @@ public class PostService {
         }
 
         PostResponseDto postResponseDto = PostMapper.toDto(post, user);
+//        return postResponseDto;
 
         return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "게시글 조회 완료", postResponseDto);
     }

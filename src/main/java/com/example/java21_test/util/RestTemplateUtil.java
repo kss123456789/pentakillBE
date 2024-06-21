@@ -29,6 +29,7 @@ public class RestTemplateUtil {
         HttpHeaders httpHeaders = new HttpHeaders();
         HttpEntity<ProbabilityRequestDto> httpEntity = new HttpEntity<>(probabilityRequestDto, httpHeaders); //엔티티로 만들기
 
-        return restTemplate.exchange(targetUrl, HttpMethod.GET, httpEntity, String.class);
+        return restTemplate.exchange(targetUrl, HttpMethod.POST, httpEntity, String.class);
     }
+
 }
