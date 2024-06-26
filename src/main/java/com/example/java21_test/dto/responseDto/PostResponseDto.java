@@ -1,9 +1,7 @@
 package com.example.java21_test.dto.responseDto;
 
-import com.example.java21_test.entity.Post;
 import lombok.Getter;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Getter
@@ -16,13 +14,14 @@ public class PostResponseDto {
     private Long dislikeCount;
     private Long commentCount;
     private Long views;
-    private Instant createAt;
-    private Instant modifiedAt;
+    private LocalDateTime createAt;
+    private LocalDateTime modifiedAt;
     private String nickname;
+    private String email;
 
     public PostResponseDto(Long id, String title, String content,
                            Boolean isLike, Long likeCount, Long dislikeCount, Long commentCount, Long views,
-                           Instant createAt, Instant modifiedAt, String nickname) {
+                           LocalDateTime createAt, LocalDateTime modifiedAt, String nickname, String email) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -34,6 +33,7 @@ public class PostResponseDto {
         this.createAt = createAt;
         this.modifiedAt = modifiedAt;
         this.nickname = nickname;
+        this.email = email;
 
     }
 }

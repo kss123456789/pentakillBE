@@ -1,6 +1,7 @@
 package com.example.java21_test.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -15,8 +16,10 @@ public class Post extends Timestamped{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
     private String title;
 
+    @NotBlank
     @Column(columnDefinition = "text")
     private String content;
     // 길이를... 어떻게 할까 고민한 결과 본문을 기준으로 검색하는 상황이 있을경우에는 조회속도면에서 장점을 가지는 varchar로 저장하는것이 좋지 않을까 생각했다.

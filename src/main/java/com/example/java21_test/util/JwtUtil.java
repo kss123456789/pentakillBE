@@ -48,8 +48,8 @@ public class JwtUtil {
     public String createAccessToken(User user, Point point) {
         Date date = new Date();
         // 60분
-        final long TOKEN_TIME = 30 * 1000L; // 기존 60 * 60 * 1000L -> 임시 30초
-//        final long TOKEN_TIME = 14 * 24 * 60 * 60 * 1000L; // access token reset 방지용 2주짜리
+//        final long TOKEN_TIME = 2 * 60 * 60 * 1000L; // 기존 60 * 60 * 1000L -> 2시간 짜리
+        final long TOKEN_TIME = 14 * 24 * 60 * 60 * 1000L; // access token reset 방지용 2주짜리
         return BEARER_PREFIX +
                 Jwts.builder()
                         .claim("email", user.getEmail())

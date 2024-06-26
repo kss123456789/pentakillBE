@@ -33,6 +33,9 @@ public class ProbabilityService {
         List<Schedule> scheduleList = betService.getRecentTournamentSchedule();
         for (Schedule schedule : scheduleList) {
             String matchId = schedule.getMatchId();
+            if (isTBD(schedule)) {
+                continue;
+            }
             // eventDtail api 요청
             String jsonFromApi = apiService.getTeamDataJsonFromApi(matchId);
             // json 값을 통해 팀관련정보 준비(ds에 줄 정보)
@@ -47,15 +50,15 @@ public class ProbabilityService {
 
     public ProbabilityRequestDto createRequestDtoFromJson(String json, String matchId) {
         log.info("json 문자열에서 Probability 값 가져오기");
-        List<ProbabilityRequestDto.Participant> participantList = new ArrayList<>();
         List<ProbabilityRequestDto.TeamProbability> teamProbabilityList = new ArrayList<>();
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode teamsNode = objectMapper.readTree(json).get("data").get("event").get("match").get("teams");
             for (JsonNode teamNode: teamsNode) {
+                List<ProbabilityRequestDto.Participant> participantList = new ArrayList<>();
                 String teamId = teamNode.get("id").asText();
                 String teamName = teamNode.get("name").asText();
-                log.info(teamName);
+                log.info(teamName + " : " + teamId);
                 List<Schedule> scheduleList = scheduleRepository.findTop5ByStateAndTeamName("completed", teamName);
                 List<JsonNode> participantsNodeList = new ArrayList<>();
                 for (Schedule schedule : scheduleList) {
@@ -69,6 +72,7 @@ public class ProbabilityService {
                     ProbabilityRequestDto.Participant participant = new ProbabilityRequestDto.Participant(roleModeMap.get(role), role);
                     participantList.add(participant);
                 }
+
                 ProbabilityRequestDto.TeamProbability teamProbability = new ProbabilityRequestDto.TeamProbability(teamId, participantList);
                 teamProbabilityList.add(teamProbability);
             }
@@ -140,5 +144,10 @@ public class ProbabilityService {
             // 예외 처리
         }
         return null;
+    }
+
+    public boolean isTBD(Schedule schedule) {
+        // tbd는 아닌지 확인
+        return schedule.getTeam1Code().equals("TBD") || schedule.getTeam2Code().equals("TBD");
     }
 }

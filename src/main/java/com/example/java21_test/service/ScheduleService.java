@@ -1,10 +1,10 @@
 package com.example.java21_test.service;
 
+import com.example.java21_test.dto.mapper.LeagueScheduleMapper;
 import com.example.java21_test.dto.mapper.ScheduleMapper;
+import com.example.java21_test.dto.responseDto.LeagueScheduleResponseDto;
 import com.example.java21_test.dto.responseDto.PageResponseScheduleByDateDto;
-import com.example.java21_test.entity.Probability;
 import com.example.java21_test.entity.Schedule;
-import com.example.java21_test.respository.ProbabilityRepository;
 import com.example.java21_test.respository.ScheduleRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,15 +31,11 @@ import java.util.stream.Collectors;
 public class ScheduleService {
     private final ScheduleRepository scheduleRepository;
     private final ApiService apiService;
-    private final ProbabilityRepository probabilityRepository;
     private final ScheduleTransactionalService scheduleTransactionalService;
 
 //    api 읽기, 값 저장, 값 가져오기, leagueId 확인
     @Value("${league.ids}")
     private List<String> leagueIdList;
-
-    @Value("${majorLeague.ids}")
-    private List<String> majorLeagueList;
 
     // 하루의 시작... 12시에 업데이트, 그날의 경기가 있다면 미리 스케줄 등록 // 업데이트 모아서 처리
     @Scheduled(cron = "0 0 0 * * ?")
@@ -55,10 +51,6 @@ public class ScheduleService {
     }
 
     public PageResponseScheduleByDateDto<LocalDate, List<Schedule>> getLeagueSchedules(Integer size, Integer page, Integer year, Integer month) {
-        // 에러
-        if (page == null || size == null) {
-            return new PageResponseScheduleByDateDto<>(HttpStatus.BAD_REQUEST.value(), "No schedules found for the league");
-        }
         // 목표 년월
         String targetYearMonth = getTargetYearMonth(year, month);
         year = Integer.valueOf(targetYearMonth.split("-")[0]);
@@ -66,12 +58,11 @@ public class ScheduleService {
         // 한달전체 일정
         List<Schedule> scheduleList = scheduleRepository.findByStartTimeWithYearAndMonth(targetYearMonth);
         // 날짜별로 그룹
-        Map<LocalDate, List<Schedule>> schedulesByDate = getSchedulesGroupedByDate(scheduleList);
+        Map<LocalDate, List<LeagueScheduleResponseDto>> schedulesByDate = getSchedulesGroupedByDate(scheduleList);
         // pagination
-
         long totalElements = schedulesByDate.size();
         int totalPages = (int) Math.ceil((double) totalElements / size);
-        Map<LocalDate, List<Schedule>> pagedSchedules = getPage(schedulesByDate, page, size);
+        Map<LocalDate, List<LeagueScheduleResponseDto>> pagedSchedules = getPage(schedulesByDate, page, size);
         return new PageResponseScheduleByDateDto<>(HttpStatus.OK.value(), targetYearMonth + " schedule-pagination 정보입니다.",
                 pagedSchedules, year, month, page, totalPages, totalElements, size);
     }
@@ -83,18 +74,19 @@ public class ScheduleService {
         if (year == null && month == null) {
             targetYearMonth = LocalDate.now().format(formatter);
         } else if (year == null || month == null ) {
-            throw new NullPointerException("need year and month or null all");
+            throw new IllegalArgumentException("year, month 둘중 하나의 값만 있습니다.");
         } else { // 특정 년월 입력시
             targetYearMonth = LocalDate.of(year, month, 1).format(formatter);
         }
         return targetYearMonth;
     }
-    public Map<LocalDate, List<Schedule>> getSchedulesGroupedByDate(List<Schedule> scheduleList) {
+    public Map<LocalDate, List<LeagueScheduleResponseDto>> getSchedulesGroupedByDate(List<Schedule> scheduleList) {
         return scheduleList.stream()
+                .map(LeagueScheduleMapper::toDto)
                 .collect(Collectors.groupingBy(
-                        (schedule) -> {
-                            String instantString = schedule.getStartTime();
-                            return instantStringToDate(instantString);
+                        (scheduleResponseDto) -> {
+                            String instantString = scheduleResponseDto.getStartTime();
+                            return getDateFromInstantString(instantString);
                         },
                         LinkedHashMap::new, // Use LinkedHashMap as the map supplier
                         Collectors.toList()
@@ -120,9 +112,9 @@ public class ScheduleService {
         return page;
     }
 
-    public LocalDate instantStringToDate(String instantString) {
+    public LocalDate getDateFromInstantString(String instantString) {
         Instant instant = Instant.parse(instantString);
-        return instant.atZone(ZoneId.of("Asia/Seoul")).toLocalDate();
+        return instant.atZone(ZoneId.of("UTC")).toLocalDate();
     }
 
     public void getScheduleNodesFromJson(String json, String leagueId, List<JsonNode> jsonNodeList) {
@@ -152,14 +144,5 @@ public class ScheduleService {
                 scheduleTransactionalService.saveSchedule(schedule);
             }
         }
-    }
-
-    public boolean needProbability(Schedule schedule) {
-        // 값 있는지, tbd는 아닌지 확인
-        if (schedule.getTeam1Code().equals("TBD") || schedule.getTeam2Code().equals("TBD")) {
-            return false;
-        }
-        Probability probability = probabilityRepository.findBySchedule(schedule).orElse(null);
-        return probability == null;
     }
 }

@@ -36,11 +36,11 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((requests) ->
-                requests.requestMatchers("/users/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/bets/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/points/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/schedules/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
+                requests.requestMatchers("/back/users/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/back/bets/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/back/points/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/back/schedules/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/back/posts/**").permitAll()
                         .anyRequest().authenticated());
         // CSRF 설정
         http.csrf(AbstractHttpConfigurer::disable);

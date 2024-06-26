@@ -1,6 +1,7 @@
 package com.example.java21_test.util;
 
 import com.example.java21_test.dto.requestDto.ProbabilityRequestDto;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -11,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 
+@Slf4j
 @Component
 public class RestTemplateUtil {
     @Value("${x-api-key}")
@@ -28,7 +30,7 @@ public class RestTemplateUtil {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders httpHeaders = new HttpHeaders();
         HttpEntity<ProbabilityRequestDto> httpEntity = new HttpEntity<>(probabilityRequestDto, httpHeaders); //엔티티로 만들기
-
+        log.info("삭제 필요?" + probabilityRequestDto.toString());
         return restTemplate.exchange(targetUrl, HttpMethod.POST, httpEntity, String.class);
     }
 

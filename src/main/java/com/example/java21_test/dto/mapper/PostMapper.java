@@ -6,7 +6,7 @@ import com.example.java21_test.entity.Post;
 import com.example.java21_test.entity.PostLike;
 import com.example.java21_test.entity.User;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class PostMapper {
@@ -34,12 +34,13 @@ public class PostMapper {
         List<Comment> commentList = post.getCommentList();
         Long commentCount = (long) commentList.size();
         Long views = post.getViews();
-        Instant createAt = post.getCreatedAt();
-        Instant modifiedAt = post.getModifiedAt();
+        LocalDateTime createAt = post.getCreatedAt();
+        LocalDateTime modifiedAt = post.getModifiedAt();
         String nickname = post.getUser().getUsername();
+        String email = post.getUser().getEmail();
 
         return new PostResponseDto(id, title, content,
                 isLike, likeCount, dislikeCount, commentCount, views,
-                createAt, modifiedAt, nickname);
+                createAt, modifiedAt, nickname, email);
     }
 }

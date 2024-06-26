@@ -1,8 +1,6 @@
 package com.example.java21_test.service;
 
-import com.example.java21_test.entity.Probability;
 import com.example.java21_test.entity.Schedule;
-import com.example.java21_test.respository.ProbabilityRepository;
 import com.example.java21_test.respository.ScheduleRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

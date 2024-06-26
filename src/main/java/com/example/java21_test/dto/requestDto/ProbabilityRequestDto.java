@@ -1,8 +1,6 @@
 package com.example.java21_test.dto.requestDto;
 
-import com.example.java21_test.dto.responseDto.LeagueScheduleResponseDto;
 import lombok.Getter;
-
 import java.util.List;
 
 @Getter

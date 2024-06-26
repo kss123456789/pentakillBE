@@ -16,13 +16,18 @@ public class ProbabilityTransactionalService {
     private final ProbabilityRepository probabilityRepository;
     @Transactional
     public void saveProbabilityFromJson(String json, Schedule schedule) {
+        log.info(json);
+        Probability probability = probabilityRepository.findBySchedule(schedule).orElse(null);
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             double team1winrate = objectMapper.readTree(json).get("team1").get("win_rate").asDouble();
             double team2winrate = objectMapper.readTree(json).get("team2").get("win_rate").asDouble();
-
-            Probability probability = new Probability(team1winrate, team2winrate, schedule);
-            probabilityRepository.save(probability);
+            if(probability != null) {
+                probability.update(team1winrate, team2winrate);
+            } else {
+                probability = new Probability(team1winrate, team2winrate, schedule);
+                probabilityRepository.save(probability);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("DS로 부터 받은 json에 문제가 있습니다.");

@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,7 +61,7 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
                 new IllegalArgumentException("댓글을 찾을 수 없습니다."));
         if (!comment.getUser().getId().equals(user.getId())) {
-            return new StatusCodeResponseDto<>(HttpStatus.FORBIDDEN.value(), "작성자가 아닙니다.");
+            throw new AuthorizationServiceException("작성자가 아닙니다.");
         }
         String content = commentRequestDto.getContent();
         comment.update(content);
@@ -77,7 +78,7 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
                 new IllegalArgumentException("댓글을 찾을 수 없습니다."));
         if (!comment.getUser().getId().equals(user.getId())) {
-            return new StatusCodeResponseDto<>(HttpStatus.FORBIDDEN.value(), "작성자가 아닙니다.");
+            throw new AuthorizationServiceException("작성자가 아닙니다.");
         }
         commentRepository.delete(comment);
 

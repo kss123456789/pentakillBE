@@ -27,4 +27,9 @@ public class Probability {
         this.probability2 = probability2;
         this.schedule = schedule;
     }
+
+    public void update(double probability1, double probability2) {
+        this.probability1 = probability1;
+        this.probability2 = probability2;
+    }
 }

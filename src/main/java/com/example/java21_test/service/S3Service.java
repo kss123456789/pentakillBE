@@ -43,11 +43,14 @@ public class S3Service {
 
     @Transactional
     public StatusCodeResponseDto<List<String>> upload(List<MultipartFile> files) throws IOException {
+        if (files == null) {
+            throw new IllegalArgumentException("사진 없이는 등록이 불가능합니다.");
+        }
         List<String> locationList = new ArrayList<>();
         for (MultipartFile file : files) {
             if (!MediaType.IMAGE_PNG.toString().equals(file.getContentType()) &&
                     !MediaType.IMAGE_JPEG.toString().equals(file.getContentType())) {
-                return new StatusCodeResponseDto<>(HttpStatus.BAD_REQUEST.value(), "이미지 파일만 가능합니다.");
+                throw new IllegalArgumentException("이미지 파일만 가능합니다.");
             }
             String fileName = TEMP_FOLDER + UUID.randomUUID();
             try (InputStream inputStream = file.getInputStream()) {
@@ -103,8 +106,11 @@ public class S3Service {
                 .destinationBucket(destinationBucket)
                 .destinationKey(destinationKey)
                 .build();
-
-        s3Client.copyObject(copyObjectRequest);
+        try {
+            s3Client.copyObject(copyObjectRequest);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("image url을 확인해주세요.");
+        }
     }
 
     // 매일 5시에 24시간 지난 temp파일 정리 최대 48시간 가량 남아있을 수 있음

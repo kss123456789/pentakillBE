@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -25,6 +26,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class BetService {
+
     private final TournamentRepository tournamentRepository;
     private final ScheduleRepository scheduleRepository;
     private final PointRepository pointRepository;
@@ -63,14 +65,16 @@ public class BetService {
             if (curreentBlockIndex == 0) {
                 // 주차별 결과의 시작일이 오늘보다 이전일 경우 current week
                 Instant blockStart = Instant.parse(scheduleListValue.getFirst().getStartTime());
-                Instant blockEnd = Instant.parse(scheduleListValue.getLast().getStartTime());
                 // 나중에 페이지네이션으로 수정할때 생각해볼것
 //                if (blockEnd.isBefore(instantNow)) {
 //                    curreentBlockIndex++;
 //                }
                 // 현재 시간 가져오기
+                // 사이 값을 기준으로 했더니 문제 발생
+                // ex 2주 마지막날짜가 23일 3주 시작 날짜가 26일  이사이의 24일 25일의 경우 어디에도 속하지 못해 0주차로 표기됨
+                // 해결책 -> 1. 각 주차별 시작 값을 기준으로 확인해본결과로 주차 확인하기 최대 O
                 Instant instantNow = Instant.now();
-                if (blockStart.isBefore(instantNow) && blockEnd.isAfter(instantNow)) {
+                if (blockStart.isBefore(instantNow)) {
                     curreentBlockIndex = scheduleListKeySet.indexOf(scheduleListValue.getFirst().getBlockName());
                 }
             }
@@ -80,7 +84,7 @@ public class BetService {
         WeeklySchedulesResponseDto weeklySchedulesResponseDto = new WeeklySchedulesResponseDto(scheduleListValueSet, scheduleListKeySet,
                 curreentBlockIndex, totalIndex);
 
-        return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "SUCCESS", weeklySchedulesResponseDto);
+        return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "최근 토너먼트 일정 조회", weeklySchedulesResponseDto);
     }
 
     public Point getPoint(UserDetailsImpl userDetails) {
@@ -90,7 +94,7 @@ public class BetService {
         if (userDetails != null) {
             User user = userDetails.getUser();
             point = pointRepository.findByUser(user).orElseThrow(() ->
-                    new IllegalArgumentException("포인트를 찾을 수 없습니다.")
+                    new BadCredentialsException("존재하지 않는 사용자 입니다.")
             );
         }
         return point;
@@ -151,7 +155,7 @@ public class BetService {
         if (tournament == null) { //오늘기준 이전 토너먼트는 끝났지만 아직 새로운 토너먼트 일정이 없는 경우
             // 여기서도 없으면 이건 500 서버에러로 처리 가장 날짜가 늦은(최근에 진행된) 토너먼트
             tournament = tournamentRepository.findTopByOrderByStartDateDesc().orElseThrow(() ->
-                    new NullPointerException("토너먼트 일정이 없음"));
+                    new NoSuchElementException("토너먼트 일정이 없음"));
         }
         String slug = tournament.getSlug().split("_")[0];
         String startDate = tournament.getStartDate();

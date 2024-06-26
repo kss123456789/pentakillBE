@@ -16,8 +16,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.NoSuchElementException;
 
 @Slf4j(topic = "게시판 post CRUD")
 @Service
@@ -43,7 +46,10 @@ public class PostService {
         return new StatusCodeResponseDto<>(HttpStatus.CREATED.value(), "게시글 생성 완료", postResponseDto);
     }
 
-    public PageResponseDto<PostResponseDto> getPostPage(Integer size, Integer page, UserDetailsImpl userDetails) {
+    public PageResponseDto<PostResponseDto> getPostPage(int size, int page, UserDetailsImpl userDetails) {
+//        if (size == null || page == null) {
+//            throw new IllegalArgumentException("page, size는 필수 입니다.");
+//        }
         User user = checkUser(userDetails);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<Post> postPage = postRepository.findAll(pageable);
@@ -54,16 +60,10 @@ public class PostService {
 
     public StatusCodeResponseDto<PostResponseDto> getPost(Long postId, UserDetailsImpl userDetails) {
         User user = checkUser(userDetails);
-        Post post = postRepository.findById(postId).orElse(null);
-
-        // 현재 throw로 error 보낼시 authorization handler에서 걸려서 401이 나오게 되었다.
-        if (post == null) {
-            log.error("존재하지 않는 게시글");
-            return new StatusCodeResponseDto<>(HttpStatus.NOT_FOUND.value(), "게시글 조회 완료x");
-        }
+        Post post = postRepository.findById(postId).orElseThrow(() ->
+                new IllegalArgumentException("게시글을 찾을 수 없습니다."));
 
         PostResponseDto postResponseDto = PostMapper.toDto(post, user);
-//        return postResponseDto;
 
         return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "게시글 조회 완료", postResponseDto);
     }
@@ -74,7 +74,7 @@ public class PostService {
         Post post = postRepository.findById(postId).orElseThrow(() ->
                 new IllegalArgumentException("게시글을 찾을 수 없습니다."));
         if (!post.getUser().getId().equals(user.getId())) {
-            return new StatusCodeResponseDto<>(HttpStatus.FORBIDDEN.value(), "작성자가 아닙니다.");
+            throw new AuthorizationServiceException("작성자가 아닙니다.");
         }
         String title = postRequestDto.getTitle();
         String content = postRequestDto.getContent();
@@ -91,7 +91,7 @@ public class PostService {
         Post post = postRepository.findById(postId).orElseThrow(() ->
                 new IllegalArgumentException("게시글을 찾을 수 없습니다."));
         if (!post.getUser().getId().equals(user.getId())) {
-            return new StatusCodeResponseDto<>(HttpStatus.FORBIDDEN.value(), "작성자가 아닙니다.");
+            throw new AuthorizationServiceException("작성자가 아닙니다.");
         }
         s3Service.deletePermanentFile(post.getContent());
         postRepository.delete(post);

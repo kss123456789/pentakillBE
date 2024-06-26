@@ -3,14 +3,14 @@ package com.example.java21_test.dto.responseDto;
 import com.example.java21_test.entity.Reply;
 import lombok.Getter;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Getter
 public class ReplyResponseDto {
     private Long id;
     private String content;
-    private Instant createAt;
-    private Instant modifiedAt;
+    private LocalDateTime createAt;
+    private LocalDateTime modifiedAt;
     private String nickname;
 
     public ReplyResponseDto(Reply reply) {

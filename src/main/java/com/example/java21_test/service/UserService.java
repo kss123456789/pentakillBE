@@ -18,6 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,13 +55,14 @@ public class UserService {
         User user = new User(username, email, password);
         userRepository.save(user);
         user = userRepository.findByEmail(email).orElseThrow(() ->
-            new IllegalArgumentException("회원을 찾을 수 없습니다.")
+                // 서버 문제
+                 new RuntimeException("회원을 찾을 수 없습니다.")
         );
         // 유저별 point db 생성
         Point point = new Point(user);
         pointRepository.save(point);
         point = pointRepository.findByUser(user).orElseThrow(() ->
-                new IllegalArgumentException("회원을 찾을 수 없습니다.")
+                new RuntimeException("회원을 찾을 수 없습니다.")
         );
         // 가입 포인트
         PointLog welcomePointLog = new PointLog(1000, "signUp", point); // enum사용으로 바꾸기...
@@ -79,13 +81,14 @@ public class UserService {
 
         // 사용자 확인
         User user = userRepository.findByEmail(email).orElseThrow(() -> //Optional<T>에 orElseThrow 메서드는 결과값이 T로 나온다 (User)
-                new IllegalArgumentException("회원을 찾을 수 없습니다."));
+                new BadCredentialsException("이메일과 비밀번호를 확인해 주세요."));
         // 비밀번호 확인
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new IllegalArgumentException("회원을 찾을 수 없습니다.");
+            throw new BadCredentialsException("이메일과 비밀번호를 확인해 주세요.");
         }
         Point point = pointRepository.findByUser(user).orElseThrow(() ->
-                new IllegalArgumentException("포인트가 존재하지 않습니다."));
+                // 유저는 있는데 point가 없는 경우 -> 서버 문제
+                new RuntimeException("포인트가 존재하지 않습니다."));
         // access token, refresh 토큰 발급
         addTokensToHeader(user, point, httpServletResponse);
 
@@ -102,7 +105,7 @@ public class UserService {
             redisUtil.deleteRefreshToken(refreshToken); // refresh 토큰 없다 오류 가능
         } else {
             log.info("refresh validate 불가");
-            return new StatusCodeResponseDto<>(HttpStatus.UNAUTHORIZED.value(), "Refresh token is not validated");
+            throw new BadCredentialsException("Refresh token is not validated");
         }
         // refresh token으로부터 email 가져오기
         Claims info = jwtUtil.getUserInfoFromToken(tokenValue);

@@ -22,27 +22,22 @@ repositories {
 }
 
 dependencies {
-//	parseDoc
+	//	parseDoc
 	implementation 'org.jsoup:jsoup:1.17.2'
-
-////	aws
+	//	aws
 	implementation 'io.awspring.cloud:spring-cloud-aws-starter:3.2.0-M1'
 	implementation 'io.awspring.cloud:spring-cloud-aws-s3:3.2.0-M1'
-
 	// redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis:3.3.0'
-
-//	Security
+	//	Security
 	implementation 'org.springframework.boot:spring-boot-starter-security'
-
-//	JWT 최신버전을 쓰느냐 마느냐는 확인이 필요함
+	//	JWT 최신버전을 쓰느냐 마느냐는 확인이 필요함
 	compileOnly group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
 	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
 	runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.5'
-
-//	jakarta validation
-	implementation 'jakarta.validation:jakarta.validation-api'
-//	jakarra persistance
+	// validation
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	//	jakarra persistance
 	implementation "jakarta.persistence:jakarta.persistence-api"
 	// MySQL
 	implementation 'mysql:mysql-connector-java:8.0.33'

@@ -7,6 +7,7 @@ import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
 import com.example.java21_test.impl.UserDetailsImpl;
 import com.example.java21_test.service.PostService;
 import com.example.java21_test.service.S3Service;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -19,48 +20,58 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/posts")
+@RequestMapping("/back/posts")
 @RequiredArgsConstructor
 public class PostController {
 
     private final PostService postService;
     private final S3Service s3Service;
     @PostMapping()
-    public StatusCodeResponseDto<PostResponseDto> createPost(@RequestBody PostRequestDto postRequestDto,
-                                                             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return postService.createPost(postRequestDto, userDetails.getUser());
+    public ResponseEntity<?> createPost(@RequestBody @Valid PostRequestDto postRequestDto,
+                                        @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        StatusCodeResponseDto<PostResponseDto> responseDto = postService.createPost(postRequestDto, userDetails.getUser());
+        return ResponseEntity.ok()
+                .body(responseDto);
     }
 
     @GetMapping()
-    public PageResponseDto<PostResponseDto> getPostPage(Integer size, Integer page,
-                                                        @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return postService.getPostPage(size, page, userDetails);
+    public ResponseEntity<?> getPostPage(@RequestParam Integer size, @RequestParam Integer page,
+                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        PageResponseDto<PostResponseDto> pageResponseDto = postService.getPostPage(size, page, userDetails);
+        return ResponseEntity.ok()
+                .body(pageResponseDto);
     }
 
     @GetMapping("/{postId}")
-    public ResponseEntity<StatusCodeResponseDto<PostResponseDto>> getPost(@PathVariable Long postId,
-                                                                          @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        StatusCodeResponseDto<PostResponseDto> statusCodeResponseDto = postService.getPost(postId, userDetails);
+    public ResponseEntity<?> getPost(@PathVariable Long postId,
+                                     @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        StatusCodeResponseDto<PostResponseDto> responseDto = postService.getPost(postId, userDetails);
         return ResponseEntity.ok()
-                .body(statusCodeResponseDto);
-//        return postService.getPost(postId, userDetails);
+                .body(responseDto);
     }
 
     @PutMapping("/{postId}")
-    public StatusCodeResponseDto<PostResponseDto> updatePost(@PathVariable Long postId,
-                                                             @RequestBody PostRequestDto postRequestDto,
-                                                             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return postService.updatePost(postId, postRequestDto, userDetails);
+    public ResponseEntity<?> updatePost(@PathVariable Long postId,
+                                        @RequestBody @Valid PostRequestDto postRequestDto,
+                                        @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        StatusCodeResponseDto<PostResponseDto> responseDto = postService.updatePost(postId, postRequestDto, userDetails);
+        return ResponseEntity.ok()
+                .body(responseDto);
     }
 
     @DeleteMapping("/{postId}")
-    public StatusCodeResponseDto<Void> deletePost(@PathVariable Long postId,
-                                                  @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return postService.deletePost(postId, userDetails);
+    public ResponseEntity<?> deletePost(@PathVariable Long postId,
+                                        @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        StatusCodeResponseDto<Void> responseDto = postService.deletePost(postId, userDetails);
+        return ResponseEntity.ok()
+                .body(responseDto);
     }
 
     @PostMapping("/images")
-    public StatusCodeResponseDto<List<String>> uploadImage(List<MultipartFile> files) throws IOException {
-        return s3Service.upload(files);
+    public ResponseEntity<?> uploadImage(List<MultipartFile> files) throws IOException {
+        StatusCodeResponseDto<List<String>> responseDto = s3Service.upload(files);
+        return ResponseEntity.ok()
+                .body(responseDto);
     }
 }

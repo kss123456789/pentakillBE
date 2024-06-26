@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,16 +39,16 @@ public class PointService {
     // 현재 테스트 용도로 쓰기위해 남겨두고 주석처리 해둘예정임
     // team code가 중복이 있을 수 있음... 중복없을 teamName을 쓰는것을 고려
     @Transactional
-    public StatusCodeResponseDto<PointLogResponseDto> pointBetting(PointBettngRequestDto pointBettngRequestDto, User user, HttpServletResponse jwtResponse) {
+    public StatusCodeResponseDto<PointLogResponseDto> pointBetting(PointBettngRequestDto pointBettngRequestDto, User user,
+                                                                   HttpServletResponse jwtResponse) throws IllegalAccessException {
         int amount = pointBettngRequestDto.getPoint();
         String matchId = pointBettngRequestDto.getMatchId();
         String teamCode = pointBettngRequestDto.getTeamCode();
-        log.info("checkloog2");
         Point point = pointRepository.findByUser(user).orElseThrow(() ->
-                new IllegalArgumentException("포인트를 찾을 수 없습니다.")
+                new RuntimeException("포인트를 찾을 수 없습니다.")
         );
         if (point.getPoint() < amount) {
-            return new StatusCodeResponseDto<>(HttpStatus.BAD_REQUEST.value(), "보유 포인트가 부족합니다.");
+            throw new IllegalAccessException("보유 포인트가 부족합니다.");
         }
         // schedule을 다른 table들과 연관관계해서 하려한다... 그리고 schedule에서 경기가 아직 시작하지 않았는지 확인후 배팅을 수행하도록 수정
         // foregin key의 경우 null이 허용되므로 null인경우도 쓸 수 있다.
@@ -55,7 +56,7 @@ public class PointService {
                 new IllegalArgumentException("존재하지 않는 경기일정입니다.")
         );
         if (!schedule.getState().equals("unstarted")) {
-            return new StatusCodeResponseDto<>(HttpStatus.BAD_REQUEST.value(), "schedule is started");
+            throw new IllegalAccessException("이미 시작된 경기입니다.");
         }
         PointLog pointLog = new PointLog(amount, teamCode, schedule.getState(), schedule, point);
         point.update(-amount);
