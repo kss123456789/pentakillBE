@@ -10,6 +10,7 @@ import com.example.java21_test.service.S3Service;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -26,11 +27,19 @@ public class PostController {
 
     private final PostService postService;
     private final S3Service s3Service;
+
+    @PostMapping("/images")
+    public ResponseEntity<?> uploadImage(List<MultipartFile> files) throws IOException {
+        StatusCodeResponseDto<List<String>> responseDto = s3Service.upload(files);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(responseDto);
+    }
+
     @PostMapping()
     public ResponseEntity<?> createPost(@RequestBody @Valid PostRequestDto postRequestDto,
                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
         StatusCodeResponseDto<PostResponseDto> responseDto = postService.createPost(postRequestDto, userDetails.getUser());
-        return ResponseEntity.ok()
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(responseDto);
     }
 
@@ -64,13 +73,6 @@ public class PostController {
                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
 
         StatusCodeResponseDto<Void> responseDto = postService.deletePost(postId, userDetails);
-        return ResponseEntity.ok()
-                .body(responseDto);
-    }
-
-    @PostMapping("/images")
-    public ResponseEntity<?> uploadImage(List<MultipartFile> files) throws IOException {
-        StatusCodeResponseDto<List<String>> responseDto = s3Service.upload(files);
         return ResponseEntity.ok()
                 .body(responseDto);
     }

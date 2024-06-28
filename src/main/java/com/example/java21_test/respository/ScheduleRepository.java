@@ -1,8 +1,6 @@
 package com.example.java21_test.respository;
 
 import com.example.java21_test.entity.Schedule;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,14 +9,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ScheduleRepository extends JpaRepository<Schedule, String> {
-    // SELECT * FROM your_table
-    //WHERE DATE_FORMAT(CONVERT_TZ(STR_TO_DATE(your_column, '%Y-%m-%dT%H:%i:%sZ'), '+00:00', @@session.time_zone), '%Y-%m') = DATE_FORMAT(CONVERT_TZ(NOW(), '+00:00', @@session.time_zone), '%Y-%m');
     @Query(value = "SELECT * FROM schedule t " +
             "WHERE DATE_FORMAT(CONVERT_TZ(STR_TO_DATE(t.start_time, '%Y-%m-%dT%H:%i:%sZ'), '+00:00', @@session.time_zone), '%Y-%m') = :targetYearMonth " +
             "ORDER BY start_time ASC", nativeQuery = true)
     List<Schedule> findByStartTimeWithYearAndMonth(@Param("targetYearMonth") String targetYearMonth);
     List<Schedule> findAllByLeagueSlugAndStartTimeBetweenOrderByStartTimeAsc(String slug, String startDate, String endDate);
-    Page<Schedule> findAllByOrderByStartTimeDesc(Pageable pageable);
     Optional<Schedule> findByMatchId(String matchId);
 
 //    List<Schedule> findTop5ByTeam1CodeOrTeam2CodeOrderByStartTimeDesc(String teamCode);

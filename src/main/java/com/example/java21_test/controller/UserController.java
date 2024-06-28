@@ -1,6 +1,7 @@
 package com.example.java21_test.controller;
 
 
+import com.example.java21_test.dto.requestDto.GoogleLoginRequestDto;
 import com.example.java21_test.dto.requestDto.LogInRequestDto;
 import com.example.java21_test.dto.requestDto.SignUpRequestDto;
 import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
@@ -9,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +24,7 @@ public class UserController {
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody SignUpRequestDto requestDto, HttpServletResponse jwtResponse) {
         StatusCodeResponseDto<Void> responseDto = userService.signup(requestDto, jwtResponse);
-        return ResponseEntity.ok()
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(responseDto);
     }
 
@@ -42,4 +44,10 @@ public class UserController {
                 .body(responseDto);
     }
 
+    @PostMapping("/google")
+    public ResponseEntity<?> googleLogin(@RequestBody @Valid GoogleLoginRequestDto requestDto, HttpServletResponse jwtResponse) {
+        StatusCodeResponseDto<Void> responseDto = userService.googleLogin(requestDto, jwtResponse);
+        return ResponseEntity.ok()
+                .body(responseDto);
+    }
 }

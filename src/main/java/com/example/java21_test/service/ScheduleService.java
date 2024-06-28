@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -37,9 +36,6 @@ public class ScheduleService {
     @Value("${league.ids}")
     private List<String> leagueIdList;
 
-    // 하루의 시작... 12시에 업데이트, 그날의 경기가 있다면 미리 스케줄 등록 // 업데이트 모아서 처리
-    @Scheduled(cron = "0 0 0 * * ?")
-//    @PostConstruct
     public void saveLeagueSchedules() {
         log.info("리그스케쥴 업데이트");
         for (String leagueId : leagueIdList) {

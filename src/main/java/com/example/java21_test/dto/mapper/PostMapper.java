@@ -18,11 +18,16 @@ public class PostMapper {
         Boolean isLike = null;
         Long likeCount = 0L;
         Long dislikeCount = 0L;
+
         for (PostLike postLike : postLikeList) {
             Boolean checkLike = postLike.getIsLike();
-            if (postLike.getUser().equals(user)) {
-                isLike = checkLike;
+            if (user != null) {
+                // 본인 확인
+                if (postLike.getUser().getId().equals(user.getId())) {
+                    isLike = checkLike;
+                }
             }
+            // like count
             if (checkLike != null) {
                 if (checkLike) {
                     likeCount++;
@@ -32,15 +37,19 @@ public class PostMapper {
             }
         }
         List<Comment> commentList = post.getCommentList();
-        Long commentCount = (long) commentList.size();
+        Long replyCount = commentList.stream()
+                .map(Comment::getReplyList)
+                .mapToLong(List::size)
+                .sum();
+        Long commentCount = commentList.size() + replyCount;
         Long views = post.getViews();
-        LocalDateTime createAt = post.getCreatedAt();
+        LocalDateTime createdAt = post.getCreatedAt();
         LocalDateTime modifiedAt = post.getModifiedAt();
         String nickname = post.getUser().getUsername();
         String email = post.getUser().getEmail();
 
         return new PostResponseDto(id, title, content,
                 isLike, likeCount, dislikeCount, commentCount, views,
-                createAt, modifiedAt, nickname, email);
+                createdAt, modifiedAt, nickname, email);
     }
 }

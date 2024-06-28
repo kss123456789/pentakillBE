@@ -108,4 +108,17 @@ public class ApiService {
 
         return result.getBody();
     }
+
+    public String getUserDataJsonFromGoogleApi(String accessToken) {
+        URI targetUrl = UriComponentsBuilder
+                .fromUriString("https://www.googleapis.com")
+                .path("/oauth2/v2/userinfo")
+                .build()
+                .encode(StandardCharsets.UTF_8) //인코딩
+                .toUri();
+
+        ResponseEntity<String> result = restTemplateUtil.getUserDataFromGoogleApi(targetUrl, accessToken);
+
+        return result.getBody();
+    }
 }

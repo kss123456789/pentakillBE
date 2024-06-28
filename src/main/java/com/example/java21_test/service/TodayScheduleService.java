@@ -6,19 +6,21 @@ import com.example.java21_test.respository.ScheduleRepository;
 import com.example.java21_test.respository.TournamentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
-@Slf4j(topic = "api update service")
+@Slf4j(topic = "todaySchedule service")
 @Service
 @RequiredArgsConstructor
-public class ApiUpdateService {
+public class TodayScheduleService {
     private final ScheduleRepository scheduleRepository;
     private final TournamentRepository tournamentRepository;
     private final TaskScheduler taskScheduler;
@@ -26,11 +28,10 @@ public class ApiUpdateService {
     private final ApiService apiService;
     private final ScheduleTransactionalService scheduleTransactionalService;
 
-    // 날짜가 오늘인 경우 스케줄 일정 등록... // 업데이트 모아서 처리
-    @Scheduled(cron = "0 0 0 * * ?")
-//    @PostConstruct
+    // 날짜가 오늘인 경우 스케줄 일정 등록...
+    @EventListener(ApplicationReadyEvent.class)
     public void checkTodaySchedule() {
-        log.info("오늘 일정 확인");
+        log.info("현재시각 : " + LocalDateTime.now());
         // 현재 날짜 가져오기
         String localDateNow = LocalDate.now().toString();
         // 최근 토너먼트 가져오기
@@ -38,7 +39,7 @@ public class ApiUpdateService {
         log.info(tournament.getSlug());
         // 오늘의 경기일정
         List<Schedule> todayScheduleList = getTodaySchedule(tournament, localDateNow);
-        log.info(String.valueOf(todayScheduleList.size()));
+        log.info("오늘의 경기수 : " + todayScheduleList.size());
         if (!todayScheduleList.isEmpty()) {
             for (Schedule schedule : todayScheduleList) {
                 log.info(schedule.getMatchId());
@@ -63,14 +64,13 @@ public class ApiUpdateService {
         log.info("updating schedule");
         //이 사이에 조회 업데이트로직이 들어감 //단순하게 그냥 그 토너먼트를 전체 업데이트 시도하도록 수정...
         String json = apiService.getEventDetailJsonFromApi(schedule.getMatchId());
-        log.info(json);
         scheduleTransactionalService.updateScheduleFromJson(json, schedule);
 
         boolean isCompleted = schedule.getState().equals("completed");
 
         if (!isCompleted) {
             // 아직 경기가 끝나지 않아서 10분뒤 다시 자신이 작동하도록 호출함
-            Instant checkTime = Instant.now().plusSeconds(30); // 10분 뒤에 다시 실행 //임시로 30초
+            Instant checkTime = Instant.now().plusSeconds(300); // 10분 뒤에 다시 실행 //임시로 30초
             taskScheduler.schedule(() -> roofScheduleTaskAt(schedule), checkTime);
         } else {
             // 배당금 분배후

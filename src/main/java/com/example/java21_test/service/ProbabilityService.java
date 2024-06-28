@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -28,7 +27,6 @@ public class ProbabilityService {
     @Value("${participant.roles}")
     String[] PARTICIPANT_ROLE;
 
-    @Scheduled(cron = "0 0 0 * * ?")
     public void saveProbability() {
         List<Schedule> scheduleList = betService.getRecentTournamentSchedule();
         for (Schedule schedule : scheduleList) {

@@ -41,7 +41,6 @@ public class ReplyService {
         String content = replyRequestDto.getContent();
         Reply reply = new Reply(content, user, comment);
         replyRepository.save(reply);
-        replyRepository.flush();
 
         ReplyResponseDto replyResponseDto = new ReplyResponseDto(reply);
         return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "답글 생성 완료", replyResponseDto);
@@ -54,7 +53,7 @@ public class ReplyService {
                 new IllegalArgumentException("댓글을 찾을 수 없습니다."));
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Reply> replyPage = replyRepository.findAll(pageable);
+        Page<Reply> replyPage = replyRepository.findAllByComment(comment, pageable);
         Page<ReplyResponseDto> replyResponseDtoPage = replyPage.map(ReplyResponseDto::new);
 
         return new PageResponseDto<>(HttpStatus.OK.value(), "답글 페이지 조회", replyResponseDtoPage);
@@ -76,7 +75,6 @@ public class ReplyService {
 
         String content = replyRequestDto.getContent();
         reply.update(content);
-        replyRepository.flush();
         ReplyResponseDto replyResponseDto = new ReplyResponseDto(reply);
 
         return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "답글 수정 완료", replyResponseDto);

@@ -1,9 +1,7 @@
 package com.example.java21_test.service;
 
 import com.example.java21_test.dto.mapper.BettingSchedulerMapper;
-import com.example.java21_test.dto.responseDto.BettingScheduleResponseDto;
-import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
-import com.example.java21_test.dto.responseDto.WeeklySchedulesResponseDto;
+import com.example.java21_test.dto.responseDto.*;
 import com.example.java21_test.entity.*;
 import com.example.java21_test.impl.UserDetailsImpl;
 import com.example.java21_test.respository.PointLogRepository;
@@ -14,13 +12,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j(topic = "openApi tournaments 저장, db조회, bet system")
 @Service
@@ -37,9 +35,6 @@ public class BetService {
     @Value("${majorLeague.ids}")
     private List<String> leagueIdList;
 
-    //최근 토너먼트 일정이 추가되었는가 매일 1시에 확인 // 업데이트 나중에 한곳에 모아서 처리
-    @Scheduled(cron = "0 0 1 * * ?")
-//    @PostConstruct
     public void saveTournaments() {
         log.info("최근토너먼트 업데이트");
         for (String leagueId : leagueIdList) {
@@ -48,46 +43,71 @@ public class BetService {
         }
     }
 
-    public StatusCodeResponseDto<WeeklySchedulesResponseDto> getRecentTournamentSchedules(UserDetailsImpl userDetails) {
+    public StatusCodeResponseDto<WeeklySchedulesPageResponseDto> getRecentTournamentSchedulesPage(Integer page, UserDetailsImpl userDetails) {
         // 최근 토너먼트 경기일정
         List<Schedule> scheduleList = getRecentTournamentSchedule();
         // 로그인 여부에 맞게 point 가져오기
         Point point = getPoint(userDetails);
         // 전체 일정에서 배팅관련, 예측 값 추가된 그룹값 response 생성
         Map<String, List<BettingScheduleResponseDto>> groupedByBlockName = getScheduleGroup(scheduleList, point);
-        //
         List<String> scheduleListKeySet = new ArrayList<>(groupedByBlockName.keySet());
         List<List<BettingScheduleResponseDto>> scheduleListValueSet = new ArrayList<>(groupedByBlockName.values());
         // 현재 주차 확인
         // block에 따라 그룹화된 값중 현재위치
-        int curreentBlockIndex = 0;
-        for (List<BettingScheduleResponseDto> scheduleListValue : scheduleListValueSet) {
-            if (curreentBlockIndex == 0) {
-                // 주차별 결과의 시작일이 오늘보다 이전일 경우 current week
-                Instant blockStart = Instant.parse(scheduleListValue.getFirst().getStartTime());
-                // 나중에 페이지네이션으로 수정할때 생각해볼것
-//                if (blockEnd.isBefore(instantNow)) {
-//                    curreentBlockIndex++;
-//                }
-                // 현재 시간 가져오기
-                // 사이 값을 기준으로 했더니 문제 발생
-                // ex 2주 마지막날짜가 23일 3주 시작 날짜가 26일  이사이의 24일 25일의 경우 어디에도 속하지 못해 0주차로 표기됨
-                // 해결책 -> 1. 각 주차별 시작 값을 기준으로 확인해본결과로 주차 확인하기 최대 O
-                Instant instantNow = Instant.now();
-                if (blockStart.isBefore(instantNow)) {
-                    curreentBlockIndex = scheduleListKeySet.indexOf(scheduleListValue.getFirst().getBlockName());
+        int currentBlockNameIndex = getCurreentBlockIndex(scheduleListKeySet, scheduleListValueSet);
+        if (page == null) {
+            page = currentBlockNameIndex;
+        }
+        int totalPages = scheduleListKeySet.size() - 1;
+
+        WeeklySchedulesPageResponseDto weeklySchedulesPageResponseDto = new WeeklySchedulesPageResponseDto(
+                scheduleListValueSet.get(page), scheduleListKeySet, currentBlockNameIndex, page, totalPages);
+
+        return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "최근 토너먼트 일정 조회", weeklySchedulesPageResponseDto);
+    }
+
+    public StatusCodeResponseDto<AccuracyResponseDto> getAccuracy() {
+        // 최근 토너먼트 경기일정
+        List<Schedule> scheduleList = getRecentTournamentSchedule();
+        // 최근토너먼트 경기 일정들에서 ai가 이길거라고 예상한 팀이 어느정도로 이겼나 정확도
+        float accuracy = getAccuracy(scheduleList);
+
+        AccuracyResponseDto accuracyResponseDto = new AccuracyResponseDto(accuracy);
+
+        return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "이번 시즌의 AI 정확도", accuracyResponseDto);
+    }
+
+    private static float getAccuracy(List<Schedule> scheduleList) {
+        int completeCount = 0;
+        float predictCount = 0f;
+        for (Schedule schedule : scheduleList) {
+            Probability probability = schedule.getProbability();
+            if (schedule.getState().equals("completed")) {
+                completeCount++;
+                if ((schedule.getTeam1Outcome().equals("win") && probability.getProbability1() > 50) ||
+                        (schedule.getTeam2Outcome().equals("win") && probability.getProbability2() > 50)) {
+                    predictCount++;
                 }
             }
         }
-        int totalIndex = scheduleListKeySet.size() - 1;
-
-        WeeklySchedulesResponseDto weeklySchedulesResponseDto = new WeeklySchedulesResponseDto(scheduleListValueSet, scheduleListKeySet,
-                curreentBlockIndex, totalIndex);
-
-        return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "최근 토너먼트 일정 조회", weeklySchedulesResponseDto);
+        return completeCount == 0 ? 0 : predictCount / completeCount;
     }
 
-    public Point getPoint(UserDetailsImpl userDetails) {
+    private static int getCurreentBlockIndex(List<String> scheduleListKeySet, List<List<BettingScheduleResponseDto>> scheduleListValueSet) {
+        int curreentBlockIndex = 0;
+        for (List<BettingScheduleResponseDto> scheduleListValue : scheduleListValueSet) {
+            // 주차별 결과의 시작일이 오늘보다 이전일 경우 current week
+            Instant blockStart = Instant.parse(scheduleListValue.getFirst().getStartTime());
+            // 현재 시간 가져오기
+            Instant instantNow = Instant.now();
+            if (blockStart.isBefore(instantNow)) {
+                curreentBlockIndex = scheduleListKeySet.indexOf(scheduleListValue.getFirst().getBlockName());
+            }
+        }
+        return curreentBlockIndex;
+    }
+
+    private Point getPoint(UserDetailsImpl userDetails) {
         // 로그인 하지 않은 사용자를 위한 default값
         Point point = null;
         // 로그인한 사용자 정보 가져오기
@@ -100,8 +120,14 @@ public class BetService {
         return point;
     }
 
-    public Map<String, List<BettingScheduleResponseDto>> getScheduleGroup(List<Schedule> scheduleList, Point point) {
+    private Map<String, List<BettingScheduleResponseDto>> getScheduleGroup(List<Schedule> scheduleList, Point point) {
         Map<String, List<BettingScheduleResponseDto>> groupedByBlockName = new LinkedHashMap<>();
+        List<String> scheduleMatchIdList = scheduleList.stream()
+                .map(Schedule::getMatchId)
+                .collect(Collectors.toList());
+        Map<Schedule, List<PointLog>> pointLogMap = pointLogRepository.findAllByScheduleIds(scheduleMatchIdList).stream()
+                .collect(Collectors.groupingBy(PointLog::getSchedule));
+
         for (Schedule schedule: scheduleList) {
             String blockName = schedule.getBlockName();
             // 같은 blockName끼리 묶어서 관리
@@ -123,13 +149,14 @@ public class BetService {
                 probability1 = probability.getProbability1();
                 probability2 = probability.getProbability2();
             }
-            List<PointLog> pointLogList = pointLogRepository.findAllBySchedule(schedule);
-            if (!pointLogList.isEmpty()) {
+
+            List<PointLog> pointLogList = pointLogMap.get(schedule);
+            if (pointLogList != null && !pointLogList.isEmpty()) {
+                // 투표율 구하기
+                Map<String, Float> ratioMap = getBettingRatios(schedule, pointLogList);
+                ratio1 = ratioMap.get(schedule.getTeam1Code());
+                ratio2 = ratioMap.get(schedule.getTeam2Code());
                 for (PointLog pointLog : pointLogList) {
-                    // 투표율 구하기
-                    Map<String, Float> ratioMap = getBettingRatios(schedule, pointLogList);
-                    ratio1 = ratioMap.get(schedule.getTeam1Code());
-                    ratio2 = ratioMap.get(schedule.getTeam2Code());
                     // 접속자의 투표확인
                     if (pointLog.getPoint().equals(point)) {
                         betting = true;
@@ -165,7 +192,7 @@ public class BetService {
                 .findAllByLeagueSlugAndStartTimeBetweenOrderByStartTimeAsc(slug, startDate, endDate);
     }
 
-    public Map<String, Float> getBettingRatios(Schedule schedule, List<PointLog> pointLogList) {
+    private static Map<String, Float> getBettingRatios(Schedule schedule, List<PointLog> pointLogList) {
         int betting1 = 0;
         int betting2 = 0;
         int total = 0;

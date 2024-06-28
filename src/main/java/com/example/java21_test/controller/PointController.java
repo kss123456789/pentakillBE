@@ -28,7 +28,7 @@ public class PointController {
                                           HttpServletResponse jwtResponse) throws IllegalAccessException {
         StatusCodeResponseDto<PointLogResponseDto> responseDto =
                 pointService.pointBetting(pointBettngRequestDto, userDetails.getUser(), jwtResponse);
-        return ResponseEntity.ok()
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(responseDto);
     }
 

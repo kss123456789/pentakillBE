@@ -12,7 +12,6 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -70,17 +69,17 @@ public class S3Service {
         Elements imgs = doc.select("img");
         for (Element img : imgs) {
             String tempUrl = img.attr("src");
-            String fileName = tempUrl.substring(tempUrl.lastIndexOf("/") + 1);
-            String tempFileName = TEMP_FOLDER + fileName;
-            String permanentFileName = PERMANENT_FOLDER + fileName;
-
-            // S3에서 파일 이동 (복사 후 삭제)
-            copyObject(bucket, tempFileName, bucket, permanentFileName);
-            s3Operations.deleteObject(bucket, tempFileName);
-
-            // URL 업데이트
-            String permanentUrl = "https://" + bucket + ".s3.amazonaws.com/" + permanentFileName;
-            img.attr("src", permanentUrl);
+            if (tempUrl.contains(TEMP_FOLDER)) {
+                String fileName = tempUrl.substring(tempUrl.lastIndexOf("/") + 1);
+                String tempFileName = TEMP_FOLDER + fileName;
+                String permanentFileName = PERMANENT_FOLDER + fileName;
+                // S3에서 파일 이동 (복사 후 삭제)
+                copyObject(bucket, tempFileName, bucket, permanentFileName);
+                s3Operations.deleteObject(bucket, tempFileName);
+                // URL 업데이트
+                String permanentUrl = "https://" + bucket + ".s3.amazonaws.com/" + permanentFileName;
+                img.attr("src", permanentUrl);
+            }
         }
         return doc.outerHtml();
     }
@@ -113,8 +112,6 @@ public class S3Service {
         }
     }
 
-    // 매일 5시에 24시간 지난 temp파일 정리 최대 48시간 가량 남아있을 수 있음
-    @Scheduled(cron = "0 0 5 * * ?")
     @Transactional
     public void deleteOldTempFiles() {
         ListObjectsRequest listObjectsRequest = ListObjectsRequest.builder()

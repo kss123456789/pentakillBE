@@ -36,7 +36,6 @@ public class CommentService {
         String content = commentRequestDto.getContent();
         Comment comment = new Comment(content, user, post);
         commentRepository.save(comment);
-        commentRepository.flush();
 
         CommentResponseDto commentResponseDto = CommentMapper.toDto(comment);
 
@@ -65,7 +64,6 @@ public class CommentService {
         }
         String content = commentRequestDto.getContent();
         comment.update(content);
-        commentRepository.flush();
 
         CommentResponseDto commentResponseDto = CommentMapper.toDto(comment);
         return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "댓글 수정 완료", commentResponseDto);

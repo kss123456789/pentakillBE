@@ -13,7 +13,8 @@ public class CommentMapper {
         LocalDateTime modifiedAt = comment.getModifiedAt();
         String nickname = comment.getUser().getUsername();
         Long replyCount = (long) comment.getReplyList().size();
+        String email = comment.getUser().getEmail();
 
-        return new CommentResponseDto(id, content, createAt, modifiedAt, nickname, replyCount);
+        return new CommentResponseDto(id, content, createAt, modifiedAt, nickname, replyCount, email);
     }
 }

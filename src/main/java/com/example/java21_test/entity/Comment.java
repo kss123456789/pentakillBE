@@ -28,7 +28,7 @@ public class Comment extends Timestamped{
     @JoinColumn(name = "post_id", nullable = false, updatable = false)
     private Post post;
 
-    @OneToMany(mappedBy = "comment")//답글 리스트 갯수 조회를 위해서는 eager를 쓰는게 맞기는 한데...
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.REMOVE)
     private List<Reply> replyList = new ArrayList<>();
 
 

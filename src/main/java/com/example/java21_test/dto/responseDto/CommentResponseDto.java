@@ -12,14 +12,16 @@ public class CommentResponseDto {
     private LocalDateTime modifiedAt;
     private String nickname;
     private Long replyCount;
+    private String email;
 
     public CommentResponseDto(Long id, String content,
-                              LocalDateTime createAt, LocalDateTime modifiedAt, String nickname, Long replyCount) {
+                              LocalDateTime createAt, LocalDateTime modifiedAt, String nickname, Long replyCount, String email) {
         this.id = id;
         this.content = content;
         this.createAt = createAt;
         this.modifiedAt = modifiedAt;
         this.nickname = nickname;
         this.replyCount = replyCount;
+        this.email = email;
     }
 }

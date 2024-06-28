@@ -40,11 +40,10 @@ public class ScheduleTransactionalService {
             JsonNode team1Node = matchNode.get("teams").get(0);
             String team1Name = team1Node.get("name").asText();
             int team1wins = team1Node.get("result").get("gameWins").asInt();
-            log.info(String.valueOf(team1wins));
             JsonNode team2Node = matchNode.get("teams").get(1);
             String team2Name = team2Node.get("name").asText();
             int team2wins = team2Node.get("result").get("gameWins").asInt();
-            log.info(String.valueOf(team2wins));
+            log.info(team1wins + " : " + team2wins);
             String state = "inProgress";
             if (team1wins > matchEndWin) {
                 state = "completed";

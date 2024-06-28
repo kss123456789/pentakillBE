@@ -19,7 +19,6 @@ public class ScheduleMapper {
         String team1Name = teamsNode.get(0).get("name").asText();
         String team1Code = teamsNode.get(0).get("code").asText();
         String team1Image =  httpToHttps(teamsNode.get(0).get("image").asText());
-        System.out.println(team1Image);
         // result, record가 null인 경우 발견
         String team1Outcome = null;
         int team1GameWins = 0;
@@ -34,8 +33,7 @@ public class ScheduleMapper {
 
         String team2Name = teamsNode.get(1).get("name").asText();
         String team2Code = teamsNode.get(1).get("code").asText();
-        String team2Image = httpToHttps(teamsNode.get(0).get("image").asText());
-        System.out.println(team2Image);
+        String team2Image = httpToHttps(teamsNode.get(1).get("image").asText());
         String team2Outcome = null;
         int team2GameWins = 0;
         int team2RecordWins = 0;

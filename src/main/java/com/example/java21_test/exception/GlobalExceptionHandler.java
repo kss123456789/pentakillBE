@@ -6,10 +6,13 @@ import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -74,6 +77,28 @@ public class GlobalExceptionHandler {
         return handleExceptionInternal(errorCode, e.getMessage());
     }
 
+    @ExceptionHandler({NoResourceFoundException.class})
+    public ResponseEntity<Object> handleMethodArgumentNotValid(NoResourceFoundException e) {
+        log.warn("handleIllegalArgument", e);
+        ErrorCode errorCode = ErrorCode.RESOURCE_NOT_FOUND;
+        return handleExceptionInternal(errorCode, e.getMessage());
+    }
+
+    @ExceptionHandler({MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentTypeMismatchException e) {
+        log.warn("handleIllegalArgument", e);
+        ErrorCode errorCode = ErrorCode.RESOURCE_NOT_FOUND;
+        return handleExceptionInternal(errorCode, e.getMessage());
+    }
+
+    @ExceptionHandler({HttpRequestMethodNotSupportedException.class})
+    public ResponseEntity<Object> handleMethodArgumentNotValid(HttpRequestMethodNotSupportedException e) {
+        log.warn("handleIllegalArgument", e);
+        ErrorCode errorCode = ErrorCode.METHOD_NOT_ALLOWED;
+        return handleExceptionInternal(errorCode, e.getMessage());
+    }
+
+    // 그외의 에러를 모두 500
     @ExceptionHandler({Exception.class})
     public ResponseEntity<Object> handleAllException(Exception ex) {
         log.warn("handleAllException", ex);

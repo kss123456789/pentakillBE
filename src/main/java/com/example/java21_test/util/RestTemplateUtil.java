@@ -7,9 +7,11 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import javax.security.auth.login.CredentialException;
 import java.net.URI;
 
 @Slf4j
@@ -30,8 +32,20 @@ public class RestTemplateUtil {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders httpHeaders = new HttpHeaders();
         HttpEntity<ProbabilityRequestDto> httpEntity = new HttpEntity<>(probabilityRequestDto, httpHeaders); //엔티티로 만들기
-        log.info("삭제 필요?" + probabilityRequestDto.toString());
         return restTemplate.exchange(targetUrl, HttpMethod.POST, httpEntity, String.class);
     }
 
+    public ResponseEntity<String> getUserDataFromGoogleApi(URI targetUrl, String accessToken) {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("Authorization", "Bearer " + accessToken);
+        log.info(httpHeaders.toString());
+        HttpEntity<ProbabilityRequestDto> httpEntity = new HttpEntity<>(httpHeaders); //엔티티로 만들기
+        try {
+            return restTemplate.exchange(targetUrl, HttpMethod.GET, httpEntity, String.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new BadCredentialsException("GoogleAccessToken에 문제가 있습니다.");
+        }
+    }
 }

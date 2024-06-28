@@ -14,6 +14,8 @@ public enum ErrorCode {
     PERMISSION_DENIED(HttpStatus.FORBIDDEN, "No permition to access resource"),
     // 404
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Resource not exists"),
+    // 405
+    METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "method not allowed"),
     // 409
     RESOURCE_CONFLICT(HttpStatus.CONFLICT, "Resource conflict occur"),
     // 500

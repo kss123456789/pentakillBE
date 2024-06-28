@@ -16,7 +16,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,12 +57,13 @@ public class PointService {
         if (!schedule.getState().equals("unstarted")) {
             throw new IllegalAccessException("이미 시작된 경기입니다.");
         }
-        PointLog pointLog = new PointLog(amount, teamCode, schedule.getState(), schedule, point);
+        PointLog pointLog = pointLogRepository.findByScheduleAndPoint(schedule, point).orElse(null);
+        if (pointLog != null) {
+            throw new IllegalArgumentException("이미 배팅한 경기 입니다.");
+        }
+        pointLog = new PointLog(amount, teamCode, schedule.getState(), schedule, point);
         point.update(-amount);
         pointLogRepository.save(pointLog);
-        pointLog = pointLogRepository.findByScheduleAndPoint(schedule, point).orElseThrow(() ->
-                new IllegalArgumentException("기록을 찾을 수 없습니다.")
-        ); //Query did not return a unique result: 2 results were returned 이미 배팅한 경기에 또다시 배팅하려고 할때
 
         PointLogResponseDto pointLogResponseDto = new PointLogResponseDto(pointLog);
 

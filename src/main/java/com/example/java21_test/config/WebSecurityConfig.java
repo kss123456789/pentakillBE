@@ -17,7 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableWebSecurity(debug = true) // Spring Security 지원을 가능하게 함
+@EnableWebSecurity() // Spring Security 지원을 가능하게 함
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
@@ -55,6 +55,7 @@ public class WebSecurityConfig {
         http.formLogin(AbstractHttpConfigurer::disable);
         http.httpBasic(AbstractHttpConfigurer::disable);
 
+        // 위의 authorizeHttpRequests에서 권한이 없는 사용자나 인증을 진행하지 않은 사용자에게 출력할 에러를 설정하는 부분
         http.exceptionHandling((exceptionHandling) -> exceptionHandling
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .accessDeniedHandler(jwtAccessDeniedHandler)

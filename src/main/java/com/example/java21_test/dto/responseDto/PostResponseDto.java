@@ -14,14 +14,14 @@ public class PostResponseDto {
     private Long dislikeCount;
     private Long commentCount;
     private Long views;
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
     private String nickname;
     private String email;
 
     public PostResponseDto(Long id, String title, String content,
                            Boolean isLike, Long likeCount, Long dislikeCount, Long commentCount, Long views,
-                           LocalDateTime createAt, LocalDateTime modifiedAt, String nickname, String email) {
+                           LocalDateTime createdAt, LocalDateTime modifiedAt, String nickname, String email) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -30,7 +30,7 @@ public class PostResponseDto {
         this.dislikeCount = dislikeCount;
         this.commentCount = commentCount;
         this.views = views;
-        this.createAt = createAt;
+        this.createdAt = createdAt;
         this.modifiedAt = modifiedAt;
         this.nickname = nickname;
         this.email = email;

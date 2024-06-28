@@ -9,15 +9,17 @@ import java.time.LocalDateTime;
 public class ReplyResponseDto {
     private Long id;
     private String content;
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
     private String nickname;
+    private String email;
 
     public ReplyResponseDto(Reply reply) {
         this.id = reply.getId();
         this.content = reply.getContent();
-        this.createAt = reply.getCreatedAt();
+        this.createdAt = reply.getCreatedAt();
         this.modifiedAt = reply.getModifiedAt();
         this.nickname = reply.getUser().getUsername();
+        this.email = reply.getUser().getEmail();
     }
 }

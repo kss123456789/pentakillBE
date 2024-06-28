@@ -1,5 +1,6 @@
 package com.example.java21_test.service;
 
+import com.example.java21_test.dto.requestDto.GoogleLoginRequestDto;
 import com.example.java21_test.dto.requestDto.LogInRequestDto;
 import com.example.java21_test.dto.requestDto.SignUpRequestDto;
 import com.example.java21_test.dto.responseDto.StatusCodeResponseDto;
@@ -12,6 +13,8 @@ import com.example.java21_test.respository.UserRepository;
 import com.example.java21_test.util.JwtUtil;
 import com.example.java21_test.util.PointUtil;
 import com.example.java21_test.util.RedisUtil;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -37,6 +41,7 @@ public class UserService {
     private final JwtUtil jwtUtil;
     private final PointUtil pointUtil;
     private final RedisUtil redisUtil;
+    private final ApiService apiService;
 
     //회원가입
     @Transactional
@@ -50,6 +55,7 @@ public class UserService {
         if (checkUsername.isPresent()) {
             throw new IllegalArgumentException("중복된 Email 입니다.");
         }
+
         // user 생성시 point도 같이 생성되도록 함... user 삭제시 point 연관관계 좀더 고민....
         // 사용자 등록
         User user = new User(username, email, password);
@@ -68,6 +74,7 @@ public class UserService {
         PointLog welcomePointLog = new PointLog(1000, "signUp", point); // enum사용으로 바꾸기...
         pointUtil.getPoint(welcomePointLog);
         pointLogRepository.save(welcomePointLog);
+
         // access token, refresh 토큰 발급
         addTokensToHeader(user, point, httpServletResponse);
 
@@ -102,7 +109,7 @@ public class UserService {
         boolean isValidate = jwtUtil.validateToken(tokenValue);
         // 이전 토큰 삭제
         if (isValidate) {
-            redisUtil.deleteRefreshToken(refreshToken); // refresh 토큰 없다 오류 가능
+            redisUtil.deleteRefreshToken(refreshToken);
         } else {
             log.info("refresh validate 불가");
             throw new BadCredentialsException("Refresh token is not validated");
@@ -115,7 +122,7 @@ public class UserService {
         User user = userRepository.findByEmail(email).orElseThrow(() -> //Optional<T>에 orElseThrow 메서드는 결과값이 T로 나온다 (User)
                 new IllegalArgumentException("회원을 찾을 수 없습니다."));
         Point point = pointRepository.findByUser(user).orElseThrow(() ->
-                new IllegalArgumentException("포인트가 존재하지 않습니다."));
+                new RuntimeException("포인트가 존재하지 않습니다."));
         // access token, refresh 토큰 발급
         addTokensToHeader(user, point, httpServletResponse);
 
@@ -132,5 +139,53 @@ public class UserService {
         log.info("refreshToken : " + refreshToken);
         jwtUtil.addRefreshTokenToHeader(refreshToken, httpServletResponse);
         redisUtil.setRefreshToken(refreshToken);
+    }
+
+    @Transactional
+    public StatusCodeResponseDto<Void> googleLogin(GoogleLoginRequestDto requestDto, HttpServletResponse httpServletResponse) {
+        String accessToken = requestDto.getGoogleAccessToken();
+        String json = apiService.getUserDataJsonFromGoogleApi(accessToken);
+        User user = validateGoogleUser(json);
+        Point point = pointRepository.findByUser(user).orElseThrow(() ->
+                new IllegalArgumentException("포인트가 존재하지 않습니다."));
+        // access token, refresh 토큰 발급
+        addTokensToHeader(user, point, httpServletResponse);
+        return new StatusCodeResponseDto<>(HttpStatus.OK.value(), "로그인 성공");
+    }
+
+    @Transactional
+    public User validateGoogleUser(String json) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(json);
+            String email = rootNode.get("email").asText();
+            String username = rootNode.get("name").asText();
+            String googleId = rootNode.get("id").asText();
+            User user = userRepository.findByGoogleId(googleId).orElse(null);
+            if (user == null) { // 이미 구글로 회원가입완료
+                user = userRepository.findByEmail(email).orElse(null);
+                if (user == null) { // 이미 기존 회원가입했을경우
+                    //google을 통해서 확인될 경우 비밀번호 검증을 하지 않을것이므로 아무도 알 수 없는 비밀번호 생성
+                    String password = UUID.randomUUID().toString();
+                    user = new User(username, email, password);
+                    userRepository.save(user);
+                    // 유저별 point db 생성
+                    Point point = new Point(user);
+                    pointRepository.save(point);
+                    point = pointRepository.findByUser(user).orElseThrow(() ->
+                            new RuntimeException("회원을 찾을 수 없습니다.")
+                    );
+                    // 가입 포인트
+                    PointLog welcomePointLog = new PointLog(1000, "signUp", point); // enum사용으로 바꾸기...
+                    pointUtil.getPoint(welcomePointLog);
+                    pointLogRepository.save(welcomePointLog);
+                }
+                user.googleIdUpdate(googleId);
+            }
+            return user;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("google json 값 읽어오기 실패");
+        }
     }
 }

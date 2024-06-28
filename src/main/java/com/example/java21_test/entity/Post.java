@@ -34,12 +34,12 @@ public class Post extends Timestamped{
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
     private User user;
 
-    @OneToMany(mappedBy = "post")
+    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE)
     private List<PostLike> postLikeList = new ArrayList<>();
 
     // 댓글 요청 api가 따로라면 fetchtype을 lazy로 해도 되겟지... 대댓글(답글)갯수를 표시해주려면 댓글에서 대댓글을 eager로 하거나 대댓글 수 column을 따로 만들어야 겟지...
     // 나중에 물어보자... 댓글 수 대댓글 수 필요한지...
-    @OneToMany(mappedBy = "post")
+    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE)
 //    @OrderBy("createdAt desc")
     private List<Comment> commentList = new ArrayList<>();
 
@@ -53,5 +53,9 @@ public class Post extends Timestamped{
     public void update(String title, String content) {
         this.title = title;
         this.content = content;
+    }
+
+    public void raiseViews() {
+        this.views++;
     }
 }

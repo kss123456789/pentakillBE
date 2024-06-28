@@ -9,6 +9,7 @@ import com.example.java21_test.service.ReplyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +28,7 @@ public class ReplyController {
                                          @AuthenticationPrincipal UserDetailsImpl userDetails) {
         StatusCodeResponseDto<ReplyResponseDto> responseDto =
                 replyService.createReply(postId, commentId, replyRequestDto, userDetails.getUser());
-        return ResponseEntity.ok()
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(responseDto);
     }
 

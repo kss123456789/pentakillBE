@@ -34,7 +34,6 @@ public class PostLikeService {
         else {
             postLike.update(isLike);
         }
-        postLikeRepository.flush();
 
         PostLikeResponseDto postLikeResponseDto = new PostLikeResponseDto(postLike);
 
