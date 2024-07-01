@@ -28,6 +28,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PointService {
 
+    private final SseTransactionalService sseTransactionalService;
     private final PointRepository pointRepository;
     private final PointLogRepository pointLogRepository;
     private final ScheduleRepository scheduleRepository;
@@ -103,6 +104,8 @@ public class PointService {
                 else {
                     pointUtil.lossPoint(pointLog);
                 }
+                // 참여자에게 발송할 결과 저장
+                sseTransactionalService.saveGameEndEvent(schedule, pointLog);
             }
         }
     }

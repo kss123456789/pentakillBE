@@ -12,6 +12,7 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,6 +28,8 @@ public class TodayScheduleService {
     private final PointService pointService;
     private final ApiService apiService;
     private final ScheduleTransactionalService scheduleTransactionalService;
+    private final SseTransactionalService sseTransactionalService;
+    private final SseService sseService;
 
     // 날짜가 오늘인 경우 스케줄 일정 등록...
     @EventListener(ApplicationReadyEvent.class)
@@ -42,15 +45,14 @@ public class TodayScheduleService {
         log.info("오늘의 경기수 : " + todayScheduleList.size());
         if (!todayScheduleList.isEmpty()) {
             for (Schedule schedule : todayScheduleList) {
-                log.info(schedule.getMatchId());
-                Instant instantStart = Instant.parse(schedule.getStartTime());
-                createScheduleTaskAt(instantStart, schedule);
+                createScheduleTaskAt(schedule);
             }
         }
     }
 
     // 1차 스케줄(경기시작시 루프를 생성할 스케줄러) 생성
-    public void createScheduleTaskAt(Instant startTime, Schedule schedule) {
+    public void createScheduleTaskAt(Schedule schedule) {
+        Instant startTime = Instant.parse(schedule.getStartTime());
         log.info(startTime.toString() + "에 시작하는 일정 등록");
         if (taskScheduler != null) {
             taskScheduler.schedule(() -> roofScheduleTaskAt(schedule), startTime);
@@ -62,6 +64,10 @@ public class TodayScheduleService {
     @Async
     public void roofScheduleTaskAt(Schedule schedule) {
         log.info("updating schedule");
+        if (schedule.getState().equals("unstarted")) {
+            sseTransactionalService.saveGameStartEvent(schedule);
+            sseService.sendNotice();
+        }
         //이 사이에 조회 업데이트로직이 들어감 //단순하게 그냥 그 토너먼트를 전체 업데이트 시도하도록 수정...
         String json = apiService.getEventDetailJsonFromApi(schedule.getMatchId());
         scheduleTransactionalService.updateScheduleFromJson(json, schedule);

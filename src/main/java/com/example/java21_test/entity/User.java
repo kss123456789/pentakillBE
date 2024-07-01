@@ -46,6 +46,9 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Reply> replyList = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user")
+    private List<SseNotice> sseNoticeList = new ArrayList<>();
+
     public User(String username, String email, String password) {
         this.username = username;
         this.email = email;
