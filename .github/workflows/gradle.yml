@@ -46,11 +46,11 @@ jobs:
     - name: Copy jar file to remote
       uses: appleboy/scp-action@master
       with:
-        username: ${{ secrets.USERNAME }}
+        username: ubuntu
         host: ${{ secrets.HOST }}
         key: ${{ secrets.PRIVATE_KEY }}
         source: "./build/libs/*.jar"
-        target: "/home/$username/cicd"
+        target: "/home/ubuntu/cicd"
         strip_components: 2
     
     # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
