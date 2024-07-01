@@ -36,6 +36,10 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
+    # properties 추가
+    - name: Create application.properties
+      run: echo "${{ secrets.APPLICATION_PROPERTIES }}" > src/test/resources/application.properties
+
     - name: Build with Gradle Wrapper
       run: ./gradlew build
 
@@ -66,6 +70,10 @@ jobs:
     # 권한 추가
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
+
+    # properties 추가
+    - name: Create application.properties
+      run: echo "${{ secrets.APPLICATION_PROPERTIES }}" > src/test/resources/application.properties
     # Generates and submits a dependency graph, enabling Dependabot Alerts for all project dependencies.
     # See: https://github.com/gradle/actions/blob/main/dependency-submission/README.md
     - name: Generate and submit dependency graph
