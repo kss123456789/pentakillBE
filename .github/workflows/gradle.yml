@@ -38,7 +38,7 @@ jobs:
 
     # properties 추가
     - name: Create application.properties
-      run: echo "${{ secrets.APPLICATION_PROPERTIES }}" > src/test/resources/application.properties
+      run: echo "${{ secrets.APPLICATION_PROPERTIES }}" > src/main/resources/application.properties
 
     - name: Build with Gradle Wrapper
       run: ./gradlew build
@@ -73,7 +73,7 @@ jobs:
 
     # properties 추가
     - name: Create application.properties
-      run: echo "${{ secrets.APPLICATION_PROPERTIES }}" > src/test/resources/application.properties
+      run: echo "${{ secrets.APPLICATION_PROPERTIES }}" > src/main/resources/application.properties
     # Generates and submits a dependency graph, enabling Dependabot Alerts for all project dependencies.
     # See: https://github.com/gradle/actions/blob/main/dependency-submission/README.md
     - name: Generate and submit dependency graph
