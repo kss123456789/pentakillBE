@@ -3,8 +3,8 @@ package com.example.java21_test.service;
 import com.example.java21_test.dto.responseDto.SseNoticeResponseDto;
 import com.example.java21_test.entity.SseNotice;
 import com.example.java21_test.entity.User;
-import com.example.java21_test.impl.UserDetailsImpl;
 import com.example.java21_test.respository.SseNoticeRepository;
+import com.example.java21_test.respository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,13 +20,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SseService {
     private final SseTransactionalService sseTransactionalService;
     private final SseNoticeRepository sseNoticeRepository;
+    private final UserRepository userRepository;
 
-    private final ConcurrentHashMap<SseEmitter, User> emittersMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, SseEmitter> emittersMap = new ConcurrentHashMap<>();
 
-    public void addEmitter(SseEmitter emitter, UserDetailsImpl userDetails) {
-        emittersMap.put(emitter, userDetails.getUser());
-        emitter.onCompletion(() -> emittersMap.remove(emitter));
-        emitter.onTimeout(() -> emittersMap.remove(emitter));
+    public void addEmitter(SseEmitter emitter, Long userId) {
+        log.info(String.valueOf(emittersMap.size()));
+        emittersMap.put(userId, emitter);
+        emitter.onCompletion(() -> emittersMap.remove(userId));
+        emitter.onTimeout(() -> emittersMap.remove(userId));
     }
 
 
@@ -37,7 +39,7 @@ public class SseService {
                 .reconnectTime(30000L);
     }
 
-    public void sendConnectEvent(SseEmitter emitter) {
+    public void sendConnectEvent(SseEmitter emitter, Long userId) {
         SseEmitter.SseEventBuilder sseEventBuilder = createEvent("connect", "connected!");
         try {
             emitter.send(sseEventBuilder);
@@ -45,7 +47,7 @@ public class SseService {
         } catch (IOException e) {
             log.error("connectFail");
             emitter.complete();
-            emittersMap.remove(emitter);
+            emittersMap.remove(userId);
         }
     }
 
@@ -83,10 +85,17 @@ public class SseService {
 //        }
 //    }
 
-    public void sendNotice() {
-        for (SseEmitter emitter : emittersMap.keySet()) {
+    public void sendNoticeAll() {
+        List<User> userList = userRepository.findAllById(emittersMap.keySet());
+        for (User user : userList) {
+            sendNoticeUser(user);
+        }
+    }
 
-            User user = emittersMap.get(emitter);
+    public void sendNoticeUser(User user) {
+        Long userId = user.getId();
+        SseEmitter emitter = emittersMap.get(userId);
+        if (emitter != null) {
             List<SseNotice> sseNoticeList = sseNoticeRepository.findAllByUser(user);
             List<SseNoticeResponseDto> sseNoticeResponseDtoList = sseNoticeList.stream()
                     .map(SseNoticeResponseDto::new)
@@ -100,10 +109,9 @@ public class SseService {
             try {
                 emitter.send(sseEventBuilder);
                 sseTransactionalService.deleteNotice(sseNoticeList);
-
             } catch (IOException e) {
                 emitter.complete();
-                emittersMap.remove(emitter);
+                emittersMap.remove(userId);
             }
         }
     }

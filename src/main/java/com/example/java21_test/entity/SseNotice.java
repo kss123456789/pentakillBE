@@ -14,28 +14,36 @@ public class SseNotice extends Timestamped {
 
     @Column(nullable = false)
     private String type;
-    @Column(nullable = false)
+    @Column
     private String team1;
-    @Column(nullable = false)
+    @Column
     private String team2;
 
     private int point = 0;
-    private String outcome = "";
+    private String outcome;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
     private User user;
 
-    public SseNotice(String type, String team1, String team2) {
+    public SseNotice(String type, String team1, String team2, User user) {
         this.type = type;
         this.team1 = team1;
         this.team2 = team2;
+        this.user = user;
     }
-    public SseNotice(String type, String team1, String team2, int point, String outcome) {
+    public SseNotice(String type, String team1, String team2, PointLog pointLog) {
         this.type = type;
         this.team1 = team1;
         this.team2 = team2;
-        this.point = point;
-        this.outcome = outcome;
+        this.point = pointLog.getAmount();
+        this.outcome = pointLog.getStatus();
+        this.user = pointLog.getPoint().getUser();
+    }
+
+    public SseNotice(String type, PointLog pointLog) {
+        this.type = type;
+        this.point = pointLog.getAmount();
+        this.user = pointLog.getPoint().getUser();
     }
 }

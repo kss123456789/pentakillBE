@@ -19,9 +19,11 @@ public class SseController {
     @GetMapping(value = "/emitter", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe(@AuthenticationPrincipal UserDetailsImpl userDetails){
         //SseEmitter는 서버에서 클라이언트로 이벤트를 전달할 수 있습니다.
+        Long userId = userDetails.getUser().getId();
         SseEmitter emitter = new SseEmitter(300_000L);
-        sseService.addEmitter(emitter, userDetails);
-        sseService.sendConnectEvent(emitter);
+        sseService.addEmitter(emitter, userId);
+        sseService.sendConnectEvent(emitter, userId);
+        sseService.sendNoticeUser(userDetails.getUser());
         return emitter;
     }
 }

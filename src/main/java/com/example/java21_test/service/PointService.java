@@ -27,7 +27,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class PointService {
-
+    private final SseService sseService;
     private final SseTransactionalService sseTransactionalService;
     private final PointRepository pointRepository;
     private final PointLogRepository pointLogRepository;
@@ -106,6 +106,8 @@ public class PointService {
                 }
                 // 참여자에게 발송할 결과 저장
                 sseTransactionalService.saveGameEndEvent(schedule, pointLog);
+                sseService.sendNoticeUser(pointLog.getPoint().getUser());
+
             }
         }
     }

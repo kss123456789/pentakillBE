@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TournamentTransactionalService {
     private final TournamentRepository tournamentRepository;
+
     @Transactional
     public void saveTournamentsFromJson(String json) {
         log.info("json 문자열을 Tournament로 변환");

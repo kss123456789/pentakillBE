@@ -12,7 +12,6 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -64,11 +63,12 @@ public class TodayScheduleService {
     @Async
     public void roofScheduleTaskAt(Schedule schedule) {
         log.info("updating schedule");
+        // 처음 경기 시작시에만 보내는 알림
         if (schedule.getState().equals("unstarted")) {
             sseTransactionalService.saveGameStartEvent(schedule);
-            sseService.sendNotice();
+            sseService.sendNoticeAll();
         }
-        //이 사이에 조회 업데이트로직이 들어감 //단순하게 그냥 그 토너먼트를 전체 업데이트 시도하도록 수정...
+        //이 사이에 조회 업데이트로직이 들어감
         String json = apiService.getEventDetailJsonFromApi(schedule.getMatchId());
         scheduleTransactionalService.updateScheduleFromJson(json, schedule);
 
@@ -76,10 +76,10 @@ public class TodayScheduleService {
 
         if (!isCompleted) {
             // 아직 경기가 끝나지 않아서 10분뒤 다시 자신이 작동하도록 호출함
-            Instant checkTime = Instant.now().plusSeconds(300); // 10분 뒤에 다시 실행 //임시로 30초
+            Instant checkTime = Instant.now().plusSeconds(300); // 5분 뒤에 다시 실행
             taskScheduler.schedule(() -> roofScheduleTaskAt(schedule), checkTime);
         } else {
-            // 배당금 분배후
+            // 배당금 분배
             pointService.checkOdds(schedule.getMatchId());
         }
     }

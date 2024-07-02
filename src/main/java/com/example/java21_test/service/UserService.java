@@ -42,6 +42,7 @@ public class UserService {
     private final PointUtil pointUtil;
     private final RedisUtil redisUtil;
     private final ApiService apiService;
+    private final SseTransactionalService sseTransactionalService;
 
     //회원가입
     @Transactional
@@ -74,6 +75,7 @@ public class UserService {
         PointLog welcomePointLog = new PointLog(1000, "signUp", point); // enum사용으로 바꾸기...
         pointUtil.getPoint(welcomePointLog);
         pointLogRepository.save(welcomePointLog);
+        sseTransactionalService.saveSignupEvent(welcomePointLog);
 
         // access token, refresh 토큰 발급
         addTokensToHeader(user, point, httpServletResponse);

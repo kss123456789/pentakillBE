@@ -3,7 +3,9 @@ package com.example.java21_test.service;
 import com.example.java21_test.entity.PointLog;
 import com.example.java21_test.entity.Schedule;
 import com.example.java21_test.entity.SseNotice;
+import com.example.java21_test.entity.User;
 import com.example.java21_test.respository.SseNoticeRepository;
+import com.example.java21_test.respository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,16 +18,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SseTransactionalService {
     private final SseNoticeRepository sseNoticeRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public void saveGameStartEvent(Schedule schedule) {
         String eventName = "matchStatusNotice";
         String team1Name = schedule.getTeam1Name();
         String team2Name = schedule.getTeam2Name();
+        List<User> userList = userRepository.findAll();
+        for (User user : userList) {
+            SseNotice sseNotice = new SseNotice(eventName, team1Name, team2Name, user);
+            sseNoticeRepository.save(sseNotice);
+        }
 
-        SseNotice sseNotice = new SseNotice(eventName, team1Name, team2Name);
-
-        sseNoticeRepository.save(sseNotice);
     }
 
     @Transactional
@@ -33,11 +38,25 @@ public class SseTransactionalService {
         String eventName = "matchResultNotice";
         String team1Name = schedule.getTeam1Name();
         String team2Name = schedule.getTeam2Name();
-        int point = pointLog.getAmount();
-        String outcome = pointLog.getStatus();
 
-        SseNotice sseNotice = new SseNotice(eventName, team1Name, team2Name, point, outcome);
+        SseNotice sseNotice = new SseNotice(eventName, team1Name, team2Name, pointLog);
+        sseNoticeRepository.save(sseNotice);
 
+    }
+
+    @Transactional
+    public void saveSignupEvent(PointLog pointLog) {
+        String eventName = "signupNotice";
+
+        SseNotice sseNotice = new SseNotice(eventName, pointLog);
+        sseNoticeRepository.save(sseNotice);
+    }
+
+    @Transactional
+    public void saveSeasonEvent(PointLog pointLog) {
+        String eventName = "seasonNotice";
+
+        SseNotice sseNotice = new SseNotice(eventName, pointLog);
         sseNoticeRepository.save(sseNotice);
     }
 
