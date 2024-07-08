@@ -38,3 +38,6 @@ out/
 
 ### application properties ###
 application-secret.properties
+
+### oci wallet ###
+Wallet_pentakill/
